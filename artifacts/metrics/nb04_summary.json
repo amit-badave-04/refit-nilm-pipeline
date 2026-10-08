@@ -1,0 +1,96 @@
+{
+  "window_selection": {
+    "val_nde": {
+      "81": 0.7191726642500115,
+      "237": 0.7955856306283279
+    },
+    "chosen_window": 81
+  },
+  "validation": [
+    {
+      "model": "M0a always-off",
+      "mae_w": 3.9069,
+      "mae_on_w": 384.8445,
+      "sae": 1.0,
+      "epd_wh": 97.7596,
+      "nde": 1.0,
+      "f1": 0.0,
+      "cycle_f1": 0.0,
+      "overlap_pct": 0.0,
+      "extra_pct": 0.0
+    },
+    {
+      "model": "M0b weekday\u00d7hour profile",
+      "mae_w": 19.7026,
+      "mae_on_w": 364.7485,
+      "sae": 3.1527,
+      "epd_wh": 301.3663,
+      "nde": 1.0246,
+      "f1": 0.0218,
+      "cycle_f1": 0.0033,
+      "overlap_pct": 5.4832,
+      "extra_pct": 409.7899
+    },
+    {
+      "model": "M1 LightGBM",
+      "mae_w": 15.9974,
+      "mae_on_w": 280.1906,
+      "sae": 2.6492,
+      "epd_wh": 247.8661,
+      "nde": 0.8662,
+      "f1": 0.1272,
+      "cycle_f1": 0.3385,
+      "overlap_pct": 27.7275,
+      "extra_pct": 337.1943
+    },
+    {
+      "model": "M2 Seq2Point W=81 s42",
+      "mae_w": 5.9128,
+      "mae_on_w": 169.6596,
+      "sae": 0.6941,
+      "epd_wh": 95.3744,
+      "nde": 0.7192,
+      "f1": 0.4016,
+      "cycle_f1": 0.6211,
+      "overlap_pct": 58.3133,
+      "extra_pct": 111.0959
+    },
+    {
+      "model": "M2 Seq2Point W=237 s42",
+      "mae_w": 6.4984,
+      "mae_on_w": 204.892,
+      "sae": 0.6338,
+      "epd_wh": 104.8724,
+      "nde": 0.7956,
+      "f1": 0.3595,
+      "cycle_f1": 0.5211,
+      "overlap_pct": 48.5249,
+      "extra_pct": 114.8563
+    },
+    {
+      "model": "M2 Seq2Point W=81 s10",
+      "mae_w": 5.0477,
+      "mae_on_w": 156.5967,
+      "sae": 0.5607,
+      "epd_wh": 84.46,
+      "nde": 0.6854,
+      "f1": 0.4631,
+      "cycle_f1": 0.5904,
+      "overlap_pct": 62.821,
+      "extra_pct": 93.2494
+    },
+    {
+      "model": "M2 Seq2Point W=81 s20",
+      "mae_w": 4.9043,
+      "mae_on_w": 160.9787,
+      "sae": 0.5206,
+      "epd_wh": 76.6987,
+      "nde": 0.6198,
+      "f1": 0.4126,
+      "cycle_f1": 0.5987,
+      "overlap_pct": 62.6677,
+      "extra_pct": 89.3929
+    }
+  ],
+  "lightgbm_trees": 21
+}

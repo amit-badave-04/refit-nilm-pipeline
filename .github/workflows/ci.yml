@@ -1,0 +1,44 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  library-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install (CPU torch)
+        run: |
+          pip install "numpy==2.4.*" "pandas==2.3.*" pyarrow scipy scikit-learn lightgbm matplotlib pytest
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -e .
+      - name: Unit tests (data-dependent tests skip without the REFIT download)
+        run: pytest -q
+
+  service:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: service
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: pip install -r requirements.txt pytest httpx
+      - name: API contract tests
+        run: pytest -q tests
+      - name: Build image
+        run: docker build -t refit-wm-nilm .
+      - name: Smoke-test the container
+        run: |
+          docker run -d -p 8080:8080 --name api refit-wm-nilm
+          for i in $(seq 1 20); do curl -fsS localhost:8080/health && break; sleep 1; done
+          curl -fsS localhost:8080/model | head -c 300

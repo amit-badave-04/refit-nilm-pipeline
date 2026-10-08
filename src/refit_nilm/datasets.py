@@ -203,3 +203,37 @@ def prepare(windows: list[int], houses: list[int] | None = None) -> tuple[dict, 
         corpora[w] = build_corpus(frames, assign_splits(frames, spec, w), w)
         stats[w] = standardisation(corpora[w])
     return frames, corpora, stats
+
+
+def to_series(corpus: Corpus, starts: np.ndarray, values: np.ndarray, house: int, freq: str = "1min") -> pd.Series:
+    """Values at window targets -> a gap-aware regular series for one house (NaN elsewhere)."""
+    t = starts + corpus.window // 2
+    keep = corpus.house[t] == house
+    times = pd.to_datetime(corpus.time[t[keep]], unit="s", utc=True)
+    s = pd.Series(np.asarray(values)[keep], index=times)
+    full = pd.date_range(times.min(), times.max(), freq=freq)
+    return s.reindex(full)
+
+
+def resample_frame(df: pd.DataFrame, minutes: int, min_valid: float = 0.8) -> pd.DataFrame:
+    """Coarsen a 1-minute house frame to ``minutes`` resolution (interval means).
+
+    An interval is usable only if at least ``min_valid`` of its minutes were usable targets,
+    mimicking a smart meter that reports average power per settlement period.
+    """
+    rule = f"{minutes}min"
+    agg = df["agg"].where(~df["agg_missing"]).resample(rule).mean()
+    wm = df["wm"].where(df["target_ok"]).resample(rule).mean()
+    ok_share = df["target_ok"].astype(float).resample(rule).mean()
+    miss_share = df["agg_missing"].astype(float).resample(rule).mean()
+    out = pd.DataFrame({"agg": agg, "wm": wm})
+    out["agg_missing"] = (miss_share > 1 - min_valid) | agg.isna()
+    out["issues"] = False
+    out["target_ok"] = (ok_share >= min_valid) & ~out["agg_missing"] & wm.notna()
+    out["house"] = int(df["house"].iloc[0])
+    return out
+
+
+def split_houses(corpus: Corpus, split: str) -> list[int]:
+    t = corpus.targets(split)
+    return sorted(int(h) for h in np.unique(corpus.house[t]))

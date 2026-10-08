@@ -48,14 +48,20 @@ def nde(y, yhat) -> float:
     return float(np.sqrt(np.sum((yhat - y) ** 2) / denom)) if denom > 0 else float("nan")
 
 
+def step_minutes(index: pd.DatetimeIndex) -> float:
+    """Sampling interval of a regular series, in minutes."""
+    return float(np.median(np.diff(index.asi8)) / 60e9) if len(index) > 1 else 1.0
+
+
 def daily_energy_errors(y: pd.Series, yhat: pd.Series, min_coverage: float = 0.9) -> pd.DataFrame:
-    """Per-day true vs predicted energy (kWh) on days with >= ``min_coverage`` valid minutes."""
+    """Per-day true vs predicted energy (kWh) on days with >= ``min_coverage`` valid samples."""
     df = pd.DataFrame({"y": y, "yhat": yhat})
     ok = df["y"].notna() & df["yhat"].notna()
     day = df.index.floor("D")
     g = df[ok].groupby(day[ok.to_numpy()])
     cov = ok.groupby(day).mean()
-    out = pd.DataFrame({"y_kwh": g["y"].sum() / 60_000, "yhat_kwh": g["yhat"].sum() / 60_000})
+    k = step_minutes(df.index) / 60_000  # W x minutes -> kWh
+    out = pd.DataFrame({"y_kwh": g["y"].sum() * k, "yhat_kwh": g["yhat"].sum() * k})
     out["coverage"] = cov.reindex(out.index)
     return out[out["coverage"] >= min_coverage]
 
@@ -99,36 +105,31 @@ def energy_split(y, yhat) -> dict:
     }
 
 
-def _minutes(delta) -> float:
-    return pd.Timedelta(delta).total_seconds() / 60.0
-
-
 def match_cycles(true_cycles: pd.DataFrame, pred_cycles: pd.DataFrame, iou_min: float = 0.5) -> pd.DataFrame:
-    """Greedy one-to-one matching of cycles by temporal IoU (minutes, inclusive ends)."""
-    rows, used = [], set()
-    for i, tc in true_cycles.iterrows():
-        best, best_iou = None, 0.0
-        for j, pc in pred_cycles.iterrows():
-            if j in used:
-                continue
-            inter = _minutes(min(tc.end, pc.end) - max(tc.start, pc.start)) + 1
-            if inter <= 0:
-                continue
-            union = _minutes(max(tc.end, pc.end) - min(tc.start, pc.start)) + 1
-            iou = inter / union
-            if iou > best_iou:
-                best, best_iou = j, iou
-        if best is not None and best_iou >= iou_min:
-            used.add(best)
-            pc = pred_cycles.loc[best]
+    """Greedy one-to-one matching of cycles by temporal IoU (whole minutes, inclusive ends)."""
+    cols = ["true_idx", "pred_idx", "iou", "true_kwh", "pred_kwh", "start_error_min"]
+    if len(true_cycles) == 0 or len(pred_cycles) == 0:
+        return pd.DataFrame(columns=cols)
+    to_min = lambda s: (pd.DatetimeIndex(s).asi8 // 60_000_000_000).astype(np.int64)  # noqa: E731
+    ts, te = to_min(true_cycles["start"]), to_min(true_cycles["end"])
+    ps, pe = to_min(pred_cycles["start"]), to_min(pred_cycles["end"])
+    used = np.zeros(len(ps), dtype=bool)
+    rows = []
+    for i in range(len(ts)):
+        inter = np.minimum(te[i], pe) - np.maximum(ts[i], ps) + 1
+        union = np.maximum(te[i], pe) - np.minimum(ts[i], ps) + 1
+        iou = np.where((inter > 0) & ~used, inter / union, 0.0)
+        j = int(np.argmax(iou))
+        if iou[j] >= iou_min:
+            used[j] = True
             rows.append(
                 {
-                    "true_idx": i, "pred_idx": best, "iou": best_iou,
-                    "true_kwh": tc.energy_kwh, "pred_kwh": pc.energy_kwh,
-                    "start_error_min": _minutes(pc.start - tc.start),
+                    "true_idx": true_cycles.index[i], "pred_idx": pred_cycles.index[j], "iou": float(iou[j]),
+                    "true_kwh": float(true_cycles["energy_kwh"].iloc[i]), "pred_kwh": float(pred_cycles["energy_kwh"].iloc[j]),
+                    "start_error_min": float(ps[j] - ts[i]),
                 }
             )
-    return pd.DataFrame(rows, columns=["true_idx", "pred_idx", "iou", "true_kwh", "pred_kwh", "start_error_min"])
+    return pd.DataFrame(rows, columns=cols)
 
 
 def cycle_scores(y: pd.Series, yhat: pd.Series, rule: CycleRule = CycleRule()) -> dict:
@@ -148,14 +149,15 @@ def cycle_scores(y: pd.Series, yhat: pd.Series, rule: CycleRule = CycleRule()) -
     }
 
 
-def all_metrics(y: pd.Series, yhat: pd.Series, p_on: pd.Series | None = None) -> dict:
+def all_metrics(y: pd.Series, yhat: pd.Series, p_on: pd.Series | None = None, with_cycles: bool = True) -> dict:
     out = {
         "mae_w": mae(y, yhat), "mae_on_w": mae_on(y, yhat), "sae": sae(y, yhat),
         "sae_daily": sae_daily(y, yhat), "nde": nde(y, yhat), "epd_wh": epd_wh(y, yhat),
     }
     out.update(state_scores(y, yhat))
     out.update(energy_split(y, yhat))
-    out.update(cycle_scores(y, yhat))
+    if with_cycles:
+        out.update(cycle_scores(y, yhat))
     if p_on is not None:
         out["auprc"] = auprc(y, p_on)
     return out
