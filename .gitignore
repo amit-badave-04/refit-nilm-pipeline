@@ -31,3 +31,4 @@ artifacts/models/*.ckpt
 .DS_Store
 Thumbs.db
 .vscode/
+artifacts/models/*.txt

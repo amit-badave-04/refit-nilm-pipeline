@@ -1,0 +1,15 @@
+house,role,wm_channel,washer_dryer_too,start,end,minutes,usable_target_pct,missing_or_flat_pct,issues_pct,wm_on_pct_of_usable,NAR_pct,wm_share_of_aggregate_energy_pct
+2,train (+ seen test),Appliance2,False,2013-09-17,2015-05-28,889018,73.2,25.3,1.51,4.01,69.0,3.74
+5,train (+ seen test),Appliance3,False,2013-09-26,2015-07-06,933533,83.0,9.6,7.59,6.06,59.4,2.54
+7,train (+ seen test),Appliance5,False,2013-11-01,2015-07-08,882910,82.9,13.1,4.06,6.78,58.2,5.94
+9,train (+ seen test),Appliance3,True,2013-12-17,2015-07-08,817947,77.9,20.0,2.02,2.04,63.1,2.01
+15,train (+ seen test),Appliance3,False,2013-12-17,2015-07-08,816947,84.2,14.4,1.4,1.94,66.7,4.76
+16,train (+ seen test),Appliance5,False,2014-01-10,2015-07-08,782773,80.4,18.8,0.8,3.61,62.9,3.42
+17,train (+ seen test),Appliance4,False,2014-03-06,2015-06-19,676650,87.8,8.2,4.01,1.37,58.6,1.6
+18,validation,Appliance5,True,2014-03-07,2015-05-24,637922,87.5,7.8,5.47,1.01,47.1,0.86
+8,test,Appliance4,True,2013-11-01,2015-05-10,799224,87.3,11.2,1.54,2.84,79.6,3.67
+1,extra unseen,Appliance5,True,2013-10-09,2015-07-10,920031,85.3,12.9,1.81,1.28,67.6,1.0
+6,extra unseen,Appliance2,False,2013-11-28,2015-06-28,831420,82.6,15.7,1.75,1.72,61.1,1.4
+10,extra unseen,Appliance5,False,2013-11-20,2015-06-30,845197,79.4,18.9,1.65,8.6,57.3,4.93
+19,extra unseen,Appliance2,False,2014-03-06,2015-06-20,677410,89.2,7.1,3.85,2.69,67.2,1.17
+20,extra unseen,Appliance4,False,2014-03-20,2015-06-23,662804,89.0,9.5,1.5,2.29,55.0,1.98

@@ -67,6 +67,8 @@ APPLIANCE_CLIP_W = 4_000.0    # REFIT IAM spike rule (> 4000 W is a sensor fault
 TRAIN_HOUSES = [2, 5, 7, 9, 15, 16, 17]
 VAL_HOUSE = 18
 TEST_HOUSE = 8
+# Further unseen homes: one WM, no PV, no documented WM change, not used for training/selection.
+EXTRA_UNSEEN_HOUSES = [1, 6, 10, 19, 20]
 # Appliance column of the washing machine used by the reference code, for cross-checking
 # the mapping parsed from the README.
 REFERENCE_WM_CHANNEL = {2: 2, 5: 3, 7: 5, 8: 4, 9: 3, 15: 3, 16: 5, 17: 4, 18: 5}
