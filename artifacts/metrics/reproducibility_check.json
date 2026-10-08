@@ -1,0 +1,32 @@
+{
+  "procedure": "git clone of the repository into an empty folder; REFIT archives copied in (SHA-256 verified); scripts/prepare_data.py; pytest; scripts/run_notebooks.py (01-06 incl. 05b) with the clone's own source first on PYTHONPATH",
+  "date": "2026-10-09",
+  "notebook_runtimes_s": {
+    "01_raw_house1_inspection_and_cleaning.ipynb": 56,
+    "02_washing_machine_eda.ipynb": 9,
+    "03_modeling_dataset_and_splits.ipynb": 14,
+    "04_baselines_and_seq2point.ipynb": 1769,
+    "05_gated_seq2point.ipynb": 604,
+    "05b_false_positive_diagnosis_and_augmentation.ipynb": 741,
+    "06_evaluation_failure_analysis_resolution.ipynb": 264
+  },
+  "table_comparison": [
+    "nb01_validation_vs_official.csv: max |diff| over numeric cells = 0; text columns identical = True",
+    "nb01_cleaning_report.csv: max |diff| over numeric cells = 0; text columns identical = True",
+    "nb02_coverage_quality.csv: max |diff| over numeric cells = 0; text columns identical = True",
+    "nb02_per_home_stats.csv: max |diff| over numeric cells = 0; text columns identical = True",
+    "nb03_label_quality.csv: max |diff| over numeric cells = 0; text columns identical = True",
+    "nb03_class_balance.csv: max |diff| over numeric cells = 0; text columns identical = True",
+    "nb04_validation.csv: max |diff| over numeric cells = 1.52588e-05; text columns identical = True",
+    "nb05_validation.csv: max |diff| over numeric cells = 0; text columns identical = True",
+    "nb05b_augmentation_val.csv: max |diff| over numeric cells = 0; text columns identical = True",
+    "nb05b_comparison_val.csv: max |diff| over numeric cells = 0; text columns identical = True",
+    "nb06_house8_mean.csv: max |diff| over numeric cells = 0; text columns identical = True",
+    "nb06_unseen_mean.csv: max |diff| over numeric cells = 0; text columns identical = True",
+    "nb06_seen_vs_unseen.csv: max |diff| over numeric cells = 0; text columns identical = True",
+    "nb06_resolution_mean_unseen.csv: max |diff| over numeric cells = 0; text columns identical = True",
+    "nb06_failure_taxonomy_house8.csv: max |diff| over numeric cells = 0; text columns identical = True"
+  ],
+  "training_log_check": "Seq2Point W=81 seed 42: training loss and validation NDE identical to 5 decimals on all 14 epochs",
+  "conclusion": "all compared results tables identical; largest numeric difference 1.5e-05 (one LightGBM validation cell)"
+}

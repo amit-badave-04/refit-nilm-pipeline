@@ -103,7 +103,8 @@ python scripts/run_notebooks.py
 ```
 
 `requirements-lock.txt` pins every package version of the environment the results were produced
-with. The notebooks are written as percent-format `.py` files (readable diffs) and executed into
+with. **Reproducibility check:** a fresh clone of this repository, run end to end with the steps above, regenerated every results table identically (largest difference 1.5e-5, one LightGBM cell) and
+the training curves to five decimals; GPU runs are seeded and deterministic (`artifacts/metrics/reproducibility_check.json`). The notebooks are written as percent-format `.py` files (readable diffs) and executed into
 `.ipynb` by `scripts/run_notebooks.py`; open either in VS Code or Jupyter.
 
 ## Key assumptions and preprocessing decisions
