@@ -558,8 +558,8 @@ print("saved")
 #   was printed or opened, and its files were deleted.
 # * The primary model was fixed in notebook 05b (`nb05b_summary.json`, `accepted: false` → M2
 #   ensemble) before this notebook ran.
-# * Spot checks: the three-day House 8 plot shows the ensemble catching the heating blocks and
-#   missing the low-power tails, consistent with the −59 % matched-energy bias; the resolution figure
-#   shows the heating block smeared into averaged values.
+# * Visual: the three-day House 8 plot shows the ensemble catching the heating blocks and missing
+#   the low-power tails, consistent with the −59 % matched-energy bias (programmatic); the
+#   resolution figure shows the heating block smeared into averaged values.
 # * The House 1 discrepancy was traced to the `Issues` flag by comparing the two label series minute
 #   by minute before attributing it.

@@ -469,8 +469,9 @@ print(json.dumps(SUMMARY, indent=1, default=str)[:1500])
 #
 # ## Verification log
 #
-# * Checked the cycle table against the plots for House 2: the selected day's cycle (0.60 kWh)
-#   matches the shaded area, and the overlay panels show the same heating-then-tail shape.
+# * Visual: the representative-day figure shows a single washing-machine block on the selected day
+#   (cycle energy 0.60 kWh from the cycle table), and the overlay panels show the same
+#   heating-then-tail shape across machines.
 # * Found and fixed three problems during review: (1) Kelly's 2,500 W maximum flagged the
 #   2.55 kW heaters in House 4 as artefacts, so the flag now uses the 13 A plug limit;
 #   (2) equal weighting let a machine with a single clean cycle dominate one cell of the heat

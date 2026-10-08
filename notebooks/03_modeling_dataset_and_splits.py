@@ -279,7 +279,7 @@ print(json.dumps(MANIFEST["windows_per_split"], indent=1))
 # * `tests/test_datasets.py` builds synthetic homes and asserts the same properties as the audit
 #   above (no cross-split or cross-house windows, embargo respected, missing-fraction cap,
 #   training-only statistics).
-# * Spot check: the first and last target timestamps per split in the audit table match the
-#   house date ranges in the label-quality table.
+# * Programmatic: the first and last target timestamps of every split in the audit table fall
+#   inside the date ranges of that split's homes in the label-quality table.
 #
 # **Next:** `04_baselines_and_seq2point` trains the baselines and the reference model.

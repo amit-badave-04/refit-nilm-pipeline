@@ -97,7 +97,7 @@ python -m ipykernel install --user --name refit-nilm --display-name refit-nilm
 #    extracts and builds the 1-minute cache (~7 GB on disk)
 python scripts/prepare_data.py
 
-# 5. tests, then every notebook in order (≈ 1.5 h with a GPU; writes artifacts/)
+# 5. tests, then every notebook in order (≈ 1 h with a laptop GPU; writes artifacts/)
 python -m pytest -q
 python scripts/run_notebooks.py
 ```

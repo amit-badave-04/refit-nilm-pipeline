@@ -509,13 +509,14 @@ print("saved:", out_path.relative_to(C.PROJECT_ROOT))
 #
 # ## Verification log
 #
-# * Read the raw CSV around 30 Mar 2014 01:00 and 27 Oct 2013 01:00 by hand: no rows in the
-#   skipped hour, and the logger's clock visibly jumps back at 01:59:58.
-# * Day plot: the washing-machine and dishwasher cycles move by exactly one hour between the raw
-#   (wall-clock) and cleaned (UTC) panels, and the 4–16 kW plug readings disappear.
+# * Clock (programmatic): counted rows in each clock-change hour (zero rows in the skipped spring
+#   hours, about double in the repeated autumn hours) and printed the rows around Part 1's single
+#   backward step (row 249,600: 01:59:58 → 01:00:01 on 27 Oct 2013).
+# * Day plot (visual): the washing-machine activity sits one hour earlier in the cleaned (UTC) panel
+#   than in the raw (wall-clock) panel, and the 4–16 kW plug readings are gone after cleaning.
 # * Each cleaning step has a unit test with a hand-computed answer (`tests/test_cleaning.py`).
-# * The independent comparison with the official release (section 11) agrees to within
-#   rounding on every channel.
+# * Independent comparison with the official release (programmatic, section 11): r ≥ 0.995 and
+#   total energy within 0.2 kWh on every channel.
 #
 # **Next:** `02_washing_machine_eda` uses the official cleaned data for all houses with a
 # washing machine.
