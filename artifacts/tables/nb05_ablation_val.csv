@@ -1,0 +1,5 @@
+,mae_w,mae_w,mae_on_w,mae_on_w,sae,sae,sae_daily,sae_daily,epd_wh,epd_wh,nde,nde,f1,f1,precision,precision,recall,recall,cycle_f1,cycle_f1,overlap_pct,overlap_pct,missing_pct,missing_pct,extra_pct,extra_pct
+,mean,std,mean,std,mean,std,mean,std,mean,std,mean,std,mean,std,mean,std,mean,std,mean,std,mean,std,mean,std,mean,std
+family,,,,,,,,,,,,,,,,,,,,,,,,,,
+M2 Seq2Point,5.288,0.546,162.412,6.648,0.592,0.091,0.328,0.046,85.511,9.382,0.675,0.051,0.426,0.033,0.291,0.029,0.792,0.017,0.603,0.016,61.267,2.559,38.733,2.559,97.913,11.579
+M3 gated Seq2Point,6.862,2.42,181.579,22.235,0.88,0.548,0.471,0.017,116.792,34.427,0.826,0.033,0.34,0.129,0.24,0.114,0.659,0.019,0.468,0.043,55.323,5.682,44.677,5.682,132.63,58.529

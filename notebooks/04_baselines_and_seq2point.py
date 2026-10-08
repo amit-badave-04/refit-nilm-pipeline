@@ -255,7 +255,7 @@ val[cols].round(3)
 #   error started rising after 21 trees: what it learns about the training homes does not transfer.
 #   Its recall is high (0.80) but precision is 0.07, so most minutes it calls "washing" are other
 #   appliances.
-# * **Seq2Point learns the signature.** It finds 60 % of the cycles in an unseen home and recovers
+# * **Seq2Point learns the signature.** It finds 71 % of the cycles in an unseen home (cycle recall; cycle F1 0.60) and recovers
 #   61 % of the true energy. Its dominant error is **false positives**: it adds almost as much
 #   energy as it recovers (98 %), mostly while other 2 kW appliances run.
 # * **Window.** W = 81 (the 1-minute equivalent of the reference 80-minute window) beats W = 237

@@ -139,4 +139,30 @@ with open(C.METRIC_DIR / "nb05_summary.json", "w") as fh:
 # %% [markdown]
 # ## Summary
 #
-# _Filled in after execution._
+# **λ.** 0.1 was kept (validation NDE 0.85 vs 0.89 for λ = 1 at seed 42).
+#
+# **Ablation on the validation house (House 18), mean ± sd over three seeds, W = 81.**
+#
+# | | Seq2Point (M2) | gated Seq2Point (M3) |
+# |---|---|---|
+# | NDE | **0.68 ± 0.05** | 0.83 ± 0.03 |
+# | MAE (W) | **5.3 ± 0.5** | 6.9 ± 2.4 |
+# | daily energy error, EpD (Wh/day) | **86 ± 9** | 117 ± 34 |
+# | F1 (minute on/off) | **0.43 ± 0.03** | 0.34 ± 0.13 |
+# | cycle F1 | **0.60 ± 0.02** | 0.47 ± 0.04 |
+# | true energy recovered | **61 %** | 55 % |
+# | extra (false) energy | **98 %** | 133 % |
+#
+# **Verdict: the gate made things worse, on every metric, and less stable across seeds.** This is
+# a negative result, and it is reported as one.
+#
+# **Why, mechanistically.** The gated models reach their best validation score after only 2–4
+# epochs and then degrade, while plain Seq2Point keeps improving for ~10. The on/off head learns
+# home-specific cues quickly; in an unseen home, a *confident* gate turns an ambiguous 2 kW event
+# into a full-power false cycle. Plain Seq2Point, trained with MSE, hedges on the same event with a
+# lower output, which costs less energy error. Gating suppresses false power only when the
+# classifier generalises, and here it is the classifier that does not.
+#
+# **Consequence.** Seq2Point remains the reference model. The gate addressed the symptom (power
+# during "off"); notebook 05b looks for the cause of the false positives on the validation house
+# and tests a change aimed at it.
