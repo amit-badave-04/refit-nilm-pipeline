@@ -1,0 +1,37 @@
+{
+  "validation_house_18": {
+    "nde": 0.602,
+    "sae": 0.592,
+    "epd_wh": 82.491,
+    "f1": 0.429,
+    "cycle_f1": 0.644,
+    "cycle_recall": 0.812,
+    "overlap_pct": 62.482,
+    "extra_pct": 96.698
+  },
+  "test_house_8": {
+    "nde": 0.737,
+    "sae": 0.284,
+    "epd_wh": 334.805,
+    "f1": 0.494,
+    "cycle_f1": 0.564,
+    "cycle_recall": 0.748,
+    "overlap_pct": 37.928,
+    "extra_pct": 33.706
+  },
+  "mean_of_6_unseen_homes": {
+    "nde": 0.826,
+    "sae": 0.312,
+    "epd_wh": 181.24,
+    "f1": 0.507,
+    "cycle_f1": 0.483,
+    "cycle_recall": 0.596,
+    "overlap_pct": 42.338,
+    "extra_pct": 59.29
+  },
+  "reference_always_off_house_8": {
+    "nde": 1.0,
+    "epd_wh": 573.7
+  },
+  "metric_notes": "NDE: 1.0 = predicting zero. EpD: mean absolute daily energy error (Wh/day). overlap/extra: true energy recovered / false energy added, % of true energy."
+}

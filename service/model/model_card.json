@@ -1,0 +1,106 @@
+{
+  "name": "wm-seq2point-ensemble-w81",
+  "artifact": "model.onnx",
+  "sha256": "de0535a63aa6f53c8dba85462402370c203ec5dfe5e9467a7099b5e43b9033b2",
+  "created_utc": "2026-10-08T20:11:47+00:00",
+  "architecture": "seq2point",
+  "window": 81,
+  "input": "1-minute whole-home active power (W), UTC-regular, gaps <= 20 %",
+  "output": "washing-machine active power (W) per minute, and the share of ensemble members that predict the machine is on (>= 20 W)",
+  "members": [
+    "m2_seq2point_w81_s42",
+    "m2_seq2point_w81_s10",
+    "m2_seq2point_w81_s20"
+  ],
+  "training_data": {
+    "dataset": "REFIT Electrical Load Measurements (cleaned), University of Strathclyde, CC BY 4.0",
+    "train_houses": [
+      2,
+      5,
+      7,
+      9,
+      15,
+      16,
+      17
+    ],
+    "validation_house": 18,
+    "test_house": 8
+  },
+  "standardisation": {
+    "agg_mean": 493.3531188964844,
+    "agg_std": 760.7543334960938,
+    "wm_mean": 15.83145809173584,
+    "wm_std": 157.4022674560547
+  },
+  "training_config": {
+    "model": "seq2point",
+    "window": 81,
+    "lr": 0.001,
+    "batch_size": 1000,
+    "max_epochs": 30,
+    "patience": 5,
+    "min_epochs": 3,
+    "state_weight": 1.0,
+    "train_samples_per_epoch": null,
+    "val_stride": 1,
+    "augment": null
+  },
+  "seeds": [
+    42,
+    10,
+    20
+  ],
+  "quantisation": {
+    "type": "dynamic int8 weights, per-channel scales",
+    "parity_vs_fp32": {
+      "max_abs_diff_w": 329.2130432128906,
+      "mean_abs_diff_w": 1.5289291143417358,
+      "corr": 0.9967831058159776,
+      "windows": 4000
+    }
+  },
+  "intended_use": "Portfolio-level estimates of washing-machine energy and usage timing in UK-like homes.",
+  "not_for": [
+    "billing or any individually binding decision",
+    "data at 15/30-minute resolution (retrain at that resolution)",
+    "homes with rooftop PV (aggregate distorted)",
+    "markets with different appliance stock (e.g. India) without local validation"
+  ],
+  "evaluation": {
+    "validation_house_18": {
+      "nde": 0.602,
+      "sae": 0.592,
+      "epd_wh": 82.491,
+      "f1": 0.429,
+      "cycle_f1": 0.644,
+      "cycle_recall": 0.812,
+      "overlap_pct": 62.482,
+      "extra_pct": 96.698
+    },
+    "test_house_8": {
+      "nde": 0.737,
+      "sae": 0.284,
+      "epd_wh": 334.805,
+      "f1": 0.494,
+      "cycle_f1": 0.564,
+      "cycle_recall": 0.748,
+      "overlap_pct": 37.928,
+      "extra_pct": 33.706
+    },
+    "mean_of_6_unseen_homes": {
+      "nde": 0.826,
+      "sae": 0.312,
+      "epd_wh": 181.24,
+      "f1": 0.507,
+      "cycle_f1": 0.483,
+      "cycle_recall": 0.596,
+      "overlap_pct": 42.338,
+      "extra_pct": 59.29
+    },
+    "reference_always_off_house_8": {
+      "nde": 1.0,
+      "epd_wh": 573.7
+    },
+    "metric_notes": "NDE: 1.0 = predicting zero. EpD: mean absolute daily energy error (Wh/day). overlap/extra: true energy recovered / false energy added, % of true energy."
+  }
+}

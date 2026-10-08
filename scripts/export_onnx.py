@@ -14,11 +14,14 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import subprocess
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
-import onnxruntime as ort
+import onnx
+import pandas as pd
 import torch
 from onnxruntime.quantization import QuantType, quantize_dynamic
 
@@ -76,26 +79,38 @@ def main() -> None:
         dep, (example,), str(fp32), input_names=["aggregate_w"], output_names=["wm_power_w", "p_on"],
         dynamic_shapes={"aggregate_w": {0: torch.export.Dim("batch")}}, dynamo=True,
     )
+    # single-file model without the exporter's intermediate shape annotations (they conflict with
+    # onnx shape inference during quantisation)
+    proto = onnx.load(str(fp32))
+    del proto.graph.value_info[:]
+    for extra in OUT.glob("model_fp32.onnx*"):
+        extra.unlink()
+    onnx.save(proto, str(fp32), save_as_external_data=False)
     int8 = OUT / "model.onnx"
-    quantize_dynamic(str(fp32), str(int8), weight_type=QuantType.QInt8)
+    quantize_dynamic(str(fp32), str(int8), weight_type=QuantType.QInt8, per_channel=True)
 
-    # parity on real validation windows
-    _, corpora, _ = D.prepare([W], houses=[C.VAL_HOUSE, C.TEST_HOUSE])
-    cp = corpora[W]
+    # parity on real windows from the test house. onnxruntime runs in a separate process: on
+    # Windows the PyTorch and onnxruntime wheels ship different OpenMP runtimes.
+    frame = D.house_frame(C.TEST_HOUSE, f"Appliance{C.REFERENCE_WM_CHANNEL[C.TEST_HOUSE]}")
+    cp = D.build_corpus({C.TEST_HOUSE: frame}, {C.TEST_HOUSE: pd.Series("test", index=frame.index)}, W)
     rng = np.random.default_rng(0)
     starts = rng.choice(cp.starts["test"], size=4000, replace=False)
     x = np.stack([cp.agg[s : s + W] for s in starts]).astype(np.float32)
     with torch.no_grad():
         ref, _ = dep(torch.from_numpy(x))
-    ref = ref.numpy()
-    sess = ort.InferenceSession(str(int8), providers=["CPUExecutionProvider"])
-    got, _ = sess.run(None, {"aggregate_w": x})
-    parity = {
-        "max_abs_diff_w": float(np.max(np.abs(got - ref))),
-        "mean_abs_diff_w": float(np.mean(np.abs(got - ref))),
-        "corr": float(np.corrcoef(got, ref)[0, 1]),
-        "windows": int(len(x)),
-    }
+    tmp = OUT / "_parity.npz"
+    np.savez(tmp, x=x, ref=ref.numpy())
+    code = (
+        "import json, sys, numpy as np, onnxruntime as ort; d = np.load(sys.argv[1]); "
+        "s = ort.InferenceSession(sys.argv[2], providers=['CPUExecutionProvider']); "
+        "got = s.run(None, {'aggregate_w': d['x']})[0]; ref = d['ref']; "
+        "print(json.dumps({'max_abs_diff_w': float(np.max(np.abs(got - ref))), "
+        "'mean_abs_diff_w': float(np.mean(np.abs(got - ref))), 'corr': float(np.corrcoef(got, ref)[0, 1]), "
+        "'windows': int(len(ref))}))"
+    )
+    res = subprocess.run([sys.executable, "-c", code, str(tmp), str(int8)], capture_output=True, text=True, check=True)
+    parity = json.loads(res.stdout.strip().splitlines()[-1])
+    tmp.unlink()
     print("int8 vs torch parity:", parity)
     if parity["corr"] < 0.99:
         raise SystemExit("quantised model deviates too much; keep fp32")
@@ -118,7 +133,7 @@ def main() -> None:
         "standardisation": stats,
         "training_config": {k: v for k, v in cfg.__dict__.items() if k != "seed"},
         "seeds": [l[1].seed for l in loaded],
-        "quantisation": {"type": "dynamic int8 weights", "parity_vs_fp32": parity},
+        "quantisation": {"type": "dynamic int8 weights, per-channel scales", "parity_vs_fp32": parity},
         "intended_use": "Portfolio-level estimates of washing-machine energy and usage timing in UK-like homes.",
         "not_for": [
             "billing or any individually binding decision",
