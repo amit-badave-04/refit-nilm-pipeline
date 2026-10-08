@@ -42,9 +42,9 @@ def test_disaggregate_shapes_and_summary(client):
     r = client.post("/v1/disaggregate", json=_req(values))
     assert r.status_code == 200, r.text
     body = r.json()
-    assert len(body["wm_power_w"]) == len(values) == len(body["wm_on_probability"])
+    assert len(body["wm_power_w"]) == len(values) == len(body["wm_on_agreement"])
     assert all(p >= 0 for p in body["wm_power_w"])
-    assert all(0 <= q <= 1 for q in body["wm_on_probability"])
+    assert all(0 <= q <= 1 for q in body["wm_on_agreement"])
     assert body["summary"]["wm_energy_kwh"] >= 0
     assert body["model_version"].count("@") == 1
     assert "x-request-id" in r.headers

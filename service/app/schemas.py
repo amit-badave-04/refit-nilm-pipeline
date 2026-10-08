@@ -71,7 +71,7 @@ class DisaggregationResponse(BaseModel):
     start: datetime
     interval_seconds: int
     wm_power_w: list[float]
-    wm_on_probability: list[float]
+    wm_on_agreement: list[float] = Field(description="Share of ensemble members predicting the machine is on (>= 20 W); an agreement score, not a calibrated probability.")
     cycles: list[Cycle]
     summary: Summary
     warnings: list[str]

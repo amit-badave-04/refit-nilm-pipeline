@@ -67,3 +67,29 @@ def test_models_output_shapes(name):
     out = m(torch.randn(4, 61))
     key = "power" if name == "seq2point" else "p_on"
     assert out[key].shape == (4,)
+
+
+def test_augmenter_adds_distractors_without_changing_target():
+    from refit_nilm.augment import AugmentConfig, Augmenter
+
+    seg = [np.full(10, 2000.0, dtype=np.float32)]
+    stats = {"agg_std": 1000.0, "wm_std": 100.0}
+    aug = Augmenter({"dishwasher": seg}, [], stats, AugmentConfig(p_distractor=1.0, p_wm=0.0), window=21, device="cpu", seed=0)
+    x, y, on = torch.zeros(64, 21), torch.zeros(64), torch.zeros(64)
+    x2, y2, on2 = aug(x.clone(), y.clone(), on.clone())
+    assert torch.all(y2 == 0) and torch.all(on2 == 0)
+    assert (x2.abs().sum(dim=1) > 0).all()  # every window overlaps the inserted segment
+    assert torch.isclose(x2.max(), torch.tensor(2.0))  # 2000 W / agg_std
+
+
+def test_augmenter_wm_insertion_updates_target():
+    from refit_nilm.augment import AugmentConfig, Augmenter
+
+    seg = [np.full(200, 500.0, dtype=np.float32)]  # longer than the window: always covers the midpoint
+    stats = {"agg_std": 1000.0, "wm_std": 100.0}
+    aug = Augmenter({}, seg, stats, AugmentConfig(p_distractor=0.0, p_wm=1.0), window=21, device="cpu", seed=0)
+    x, y, on = torch.zeros(32, 21), torch.zeros(32), torch.zeros(32)
+    x2, y2, on2 = aug(x, y, on)
+    covered = x2[:, 10] > 0
+    assert torch.allclose(y2[covered], torch.tensor(5.0))
+    assert torch.all(on2[covered] == 1)

@@ -30,33 +30,44 @@ OUT = C.PROJECT_ROOT / "service" / "model"
 
 
 class Deployable(torch.nn.Module):
-    def __init__(self, model: torch.nn.Module, stats: dict):
+    """One or more members (seed ensemble) behind a single watts-in / watts-out interface.
+
+    Output 1: washing-machine power (W), the mean of the members' clipped outputs.
+    Output 2: share of members whose output is >= 20 W (an agreement score in [0, 1]; for a
+    single plain Seq2Point member it is 0 or 1, not a calibrated probability).
+    """
+
+    def __init__(self, models: list[torch.nn.Module], stats: dict):
         super().__init__()
-        self.model = model
+        self.members = torch.nn.ModuleList(models)
         self.register_buffer("agg_mean", torch.tensor(stats["agg_mean"], dtype=torch.float32))
         self.register_buffer("agg_std", torch.tensor(stats["agg_std"], dtype=torch.float32))
         self.register_buffer("wm_std", torch.tensor(stats["wm_std"], dtype=torch.float32))
 
     def forward(self, aggregate_w: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-        out = self.model((aggregate_w - self.agg_mean) / self.agg_std)
-        if "p_on" in out:
-            p_on = out["p_on"]
-            power = p_on * out["power_raw"]
-        else:
-            power = out["power"]
-            p_on = (power * self.wm_std >= C.WM_ON_THRESHOLD_W).float()
-        return (power * self.wm_std).clamp_min(0.0), p_on
+        x = (aggregate_w - self.agg_mean) / self.agg_std
+        powers = []
+        for m in self.members:
+            out = m(x)
+            p = out["p_on"] * out["power_raw"] if "p_on" in out else out["power"]
+            powers.append((p * self.wm_std).clamp_min(0.0))
+        stacked = torch.stack(powers, dim=0)
+        agree = (stacked >= C.WM_ON_THRESHOLD_W).float().mean(dim=0)
+        return stacked.mean(dim=0), agree
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--checkpoint", required=True)
+    ap.add_argument("--checkpoint", required=True, nargs="+", help="one checkpoint, or several for a seed ensemble")
     ap.add_argument("--name", required=True)
     ap.add_argument("--card-extra", default=None, help="JSON file with evaluation results to embed")
     args = ap.parse_args()
 
-    model, cfg, stats = T.load_run(Path(args.checkpoint), device="cpu")
-    dep = Deployable(model, stats).eval()
+    loaded = [T.load_run(Path(c), device="cpu") for c in args.checkpoint]
+    cfg, stats = loaded[0][1], loaded[0][2]
+    if any(l[2] != stats or l[1].window != cfg.window for l in loaded):
+        raise SystemExit("ensemble members must share window and normalisation statistics")
+    dep = Deployable([l[0] for l in loaded], stats).eval()
     W = cfg.window
     OUT.mkdir(parents=True, exist_ok=True)
     fp32 = OUT / "model_fp32.onnx"
@@ -98,13 +109,15 @@ def main() -> None:
         "architecture": cfg.model,
         "window": W,
         "input": "1-minute whole-home active power (W), UTC-regular, gaps <= 20 %",
-        "output": "washing-machine active power (W) and on-probability per minute",
+        "output": "washing-machine active power (W) per minute, and the share of ensemble members that predict the machine is on (>= 20 W)",
+        "members": [Path(c).stem for c in args.checkpoint],
         "training_data": {
             "dataset": "REFIT Electrical Load Measurements (cleaned), University of Strathclyde, CC BY 4.0",
             "train_houses": C.TRAIN_HOUSES, "validation_house": C.VAL_HOUSE, "test_house": C.TEST_HOUSE,
         },
         "standardisation": stats,
-        "training_config": {k: v for k, v in cfg.__dict__.items()},
+        "training_config": {k: v for k, v in cfg.__dict__.items() if k != "seed"},
+        "seeds": [l[1].seed for l in loaded],
         "quantisation": {"type": "dynamic int8 weights", "parity_vs_fp32": parity},
         "intended_use": "Portfolio-level estimates of washing-machine energy and usage timing in UK-like homes.",
         "not_for": [

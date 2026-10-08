@@ -39,6 +39,7 @@ class TrainConfig:
     state_weight: float = 1.0      # lambda for the gated model's BCE term
     train_samples_per_epoch: int | None = None  # None = all training windows
     val_stride: int = 1
+    augment: dict | None = None    # e.g. {"p_distractor": 0.5, "p_wm": 0.0}; recorded for provenance
 
 
 def set_seed(seed: int) -> None:
@@ -107,7 +108,7 @@ def nde_np(y: np.ndarray, yhat: np.ndarray) -> float:
     return float(np.sqrt(np.sum((yhat - y) ** 2) / np.sum(y**2)))
 
 
-def fit(corpus: Corpus, stats: dict, cfg: TrainConfig, device: str = "cuda", log_every: int = 1) -> tuple[torch.nn.Module, list[dict]]:
+def fit(corpus: Corpus, stats: dict, cfg: TrainConfig, device: str = "cuda", log_every: int = 1, augmenter=None) -> tuple[torch.nn.Module, list[dict]]:
     set_seed(cfg.seed)
     src = WindowSource(corpus, stats, device)
     model = build(cfg.model, cfg.window).to(device)
@@ -127,6 +128,8 @@ def fit(corpus: Corpus, stats: dict, cfg: TrainConfig, device: str = "cuda", log
         total, n = torch.zeros((), device=device), 0
         for i in range(0, len(perm), cfg.batch_size):
             xb, yb, onb = src.batch(perm[i : i + cfg.batch_size])
+            if augmenter is not None:
+                xb, yb, onb = augmenter(xb, yb, onb)
             loss = loss_fn(model(xb), yb, onb, cfg)
             opt.zero_grad(set_to_none=True)
             loss.backward()

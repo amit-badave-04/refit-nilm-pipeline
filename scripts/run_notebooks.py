@@ -15,7 +15,7 @@ NB_DIR = ROOT / "notebooks"
 
 
 def run(stem: str) -> None:
-    src = next(NB_DIR.glob(f"{stem}*.py"))
+    src = next(NB_DIR.glob(f"{stem}_*.py"))
     ipynb = src.with_suffix(".ipynb")
     nb = jupytext.read(src)  # the .py file is the single source of truth
     nb.metadata.pop("jupytext", None)  # no pairing: the .ipynb is a build output
@@ -36,6 +36,6 @@ def run(stem: str) -> None:
 
 
 if __name__ == "__main__":
-    stems = sys.argv[1:] or sorted(p.name[:2] for p in NB_DIR.glob("[0-9][0-9]_*.py"))
+    stems = sys.argv[1:] or sorted(p.name.split("_")[0] for p in NB_DIR.glob("[0-9][0-9]*_*.py"))
     for s in stems:
         run(s)

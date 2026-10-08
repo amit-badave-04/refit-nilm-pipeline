@@ -1,6 +1,6 @@
 """Washing-machine disaggregation API.
 
-POST /v1/disaggregate   1-minute whole-home power -> washing-machine power, on-probability, cycles
+POST /v1/disaggregate   1-minute whole-home power -> washing-machine power, on-agreement, cycles
 GET  /health            liveness + model loaded
 GET  /model             model card (training data, validation/test scores, limits of use)
 
@@ -122,7 +122,7 @@ def create_app(engine: Engine | None = None) -> FastAPI:
             warnings.append(f"{n_missing} missing readings were filled from neighbouring values")
         return DisaggregationResponse(
             model_version=engine.version, start=req.start, interval_seconds=60,
-            wm_power_w=power.tolist(), wm_on_probability=np.round(pred.p_on.astype(float), 3).tolist(),
+            wm_power_w=power.tolist(), wm_on_agreement=np.round(pred.p_on.astype(float), 3).tolist(),
             cycles=cyc,
             summary=Summary(
                 wm_energy_kwh=round(wm_kwh, 3), aggregate_energy_kwh=round(agg_kwh, 3),

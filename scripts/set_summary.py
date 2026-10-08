@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 stem, md_path = sys.argv[1], Path(sys.argv[2])
 md = md_path.read_text(encoding="utf-8").strip("\n")
 
-src = next((ROOT / "notebooks").glob(f"{stem}*.py"))
+src = next((ROOT / "notebooks").glob(f"{stem}_*.py"))
 text = src.read_text(encoding="utf-8")
 i = text.index("# ## Summary")
 commented = "\n".join(("# " + line) if line else "#" for line in md.splitlines())
