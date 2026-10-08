@@ -1,0 +1,33 @@
+# ---- private / personal material: never commit ----
+*.pdf
+*.eml
+Research/
+
+# ---- data (REFIT is CC BY 4.0; fetched by scripts/download_data.py, never committed) ----
+Data/
+*.7z
+*.csv
+!artifacts/**/*.csv
+*.parquet
+
+# ---- python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+.coverage
+htmlcov/
+
+# ---- env / secrets ----
+.env
+.venv/
+
+# ---- model weights: only the exported ONNX + small checkpoints are versioned ----
+artifacts/models/*.pt
+artifacts/models/*.ckpt
+
+# ---- os / editor ----
+.DS_Store
+Thumbs.db
+.vscode/

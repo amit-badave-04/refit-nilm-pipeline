@@ -1,0 +1,27 @@
+name: refit-nilm
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - 7zip
+  - numpy
+  - scipy
+  - pandas=2.3.*
+  - pyarrow
+  - matplotlib
+  - seaborn
+  - scikit-learn
+  - lightgbm
+  - pyyaml
+  - tqdm
+  - pytest
+  - papermill
+  - nbconvert
+  - jupytext
+  - nbstripout
+  - ipykernel
+  - jupyterlab
+  - uv
+  - pip
+# PyTorch (CUDA 13.0 build for Blackwell/sm_120) and the service deps are installed
+# with uv after env creation; see README "Setup".
