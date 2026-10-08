@@ -1,0 +1,9 @@
+file,date,change,rows_01_02,rows_per_hour_before
+raw Part1,2013-10-27,autumn (hour repeated),1199,600
+raw Part1,2014-03-30,spring (hour skipped),0,600
+raw Part2,2014-10-26,autumn (hour repeated),986,537
+raw Part2,2015-03-29,spring (hour skipped),0,539
+official cleaned,2013-10-27,autumn (hour repeated),881,400
+official cleaned,2014-03-30,spring (hour skipped),600,680
+official cleaned,2014-10-26,autumn (hour repeated),986,537
+official cleaned,2015-03-29,spring (hour skipped),0,539

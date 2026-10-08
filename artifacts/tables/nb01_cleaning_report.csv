@@ -1,0 +1,10 @@
+step,rows,rows_shifted_by_1h,rows_dropped_ambiguous_or_nonexistent,backward_steps_before,overlap_start_utc,overlap_end_utc,part2_rows_dropped_in_overlap,part1_rows_in_overlap,exact_duplicates_removed,conflicting_same_time_removed,iam_cells_masked,aggregate_cells_masked,cells_forward_filled,limit_s,minutes,minutes_without_readings,short_gaps_filled,minutes_filled,long_gaps_flagged,minutes_in_long_gaps,minutes_flagged
+Part1: wall-clock -> UTC,4377877.0,2795917.0,0.0,1.0,,,,,,,,,,,,,,,,,
+Part2: wall-clock -> UTC,4140886.0,2253241.0,986.0,0.0,,,,,,,,,,,,,,,,,
+resolve Part1/Part2 overlap,,,,,2014-06-27 20:57:49,2014-10-01 00:27:07,945403.0,1257865.0,,,,,,,,,,,,,
+drop duplicates,,,,,,,,,884252.0,131753.0,,,,,,,,,,,
+mask impossible values,,,,,,,,,,,3222.0,59.0,,,,,,,,,
+carry event rows forward,,,,,,,,,,,,,2328155.0,120.0,,,,,,,
+resample to 1 minute,,,,,,,,,,,,,,,920031.0,122187.0,,,,,
+fill short gaps / flag long gaps,,,,,,,,,,,,,,,,,446.0,631.0,447.0,121577.0,
+flag IAM sum > aggregate,,,,,,,,,,,,,,,,,,,,,7049.0

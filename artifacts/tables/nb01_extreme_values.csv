@@ -1,0 +1,21 @@
+file,channel,appliance,p99.9_W,max_W,over_limit,sentinels,negative
+Part1,Aggregate,Aggregate,10603.0,24000.0,26,0,0
+Part1,Appliance1,Fridge,108.0,69629.0,662,24,0
+Part1,Appliance2,Freezer(1),61.0,98301.0,18,3,0
+Part1,Appliance3,Freezer(2),196.0,32751.0,38,0,0
+Part1,Appliance4,Washer Dryer,1424.0,98301.0,2014,111,0
+Part1,Appliance5,Washing Machine,2340.0,32767.0,156,2,0
+Part1,Appliance6,Dishwasher,2285.0,14336.0,24,0,0
+Part1,Appliance7,Computer,46.0,98299.0,3,0,0
+Part1,Appliance8,Television Site,47.0,65549.0,88,2,0
+Part1,Appliance9,Electric Heater,1041.0,65535.0,35,3,0
+Part2,Aggregate,Aggregate,10773.264000001363,29159.0,51,0,0
+Part2,Appliance1,Fridge,105.0,76677.0,184,11,0
+Part2,Appliance2,Freezer(1),61.0,66685.0,22,0,0
+Part2,Appliance3,Freezer(2),196.0,73725.0,80,1,0
+Part2,Appliance4,Washer Dryer,144.0,98301.0,71,7,0
+Part2,Appliance5,Washing Machine,2345.0,73725.0,65,1,0
+Part2,Appliance6,Dishwasher,2289.0,37610.0,12,0,0
+Part2,Appliance7,Computer,49.0,73725.0,371,0,0
+Part2,Appliance8,Television Site,54.0,98301.0,91,4,0
+Part2,Appliance9,Electric Heater,1050.0,32737.0,15,0,0

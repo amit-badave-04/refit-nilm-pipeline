@@ -85,7 +85,7 @@ def clock_change_hours(unix: pd.Series, start: str, end: str) -> pd.DataFrame:
         # last Sunday of March / October
         for month, kind in ((3, "spring (hour skipped)"), (10, "autumn (hour repeated)")):
             last = pd.Timestamp(year=y, month=month, day=31)
-            day = last - pd.Timedelta(days=int((last.weekday() + 1) % 7))
+            day = last - pd.Timedelta(f"{(last.weekday() + 1) % 7}D")
             s = pd.Timestamp(f"{day.date()} 01:00").value // 10**9
             if not (pd.Timestamp(start).value // 10**9 <= s <= pd.Timestamp(end).value // 10**9):
                 continue

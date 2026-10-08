@@ -1,0 +1,20 @@
+,Part1,Part2
+rows,4377877,4140886
+first_unix_as_utc,2013-10-09 14:06:17,2014-06-27 21:57:49
+last_unix_as_utc,2014-10-01 01:27:07,2015-07-10 11:56:32
+time_parse_failures,0,0
+time_vs_unix_offset_s_max_abs,1,1
+backward_steps,1,0
+duplicate_unix,1004404,14755
+exact_duplicate_rows,884307,393
+median_interval_s,7.0,7.0
+p99_interval_s,16.0,9.0
+gaps_over_2min,593,122
+gaps_over_1h,14,19
+aggregate_nan_pct,0.0,4.564
+iam_nan_pct,0.0,13.672
+negative_values,0,0
+aggregate_over_23kW,26,51
+iam_over_4kW,3038,911
+iam_sentinel_values,145,24
+rows_iam_sum_gt_aggregate_pct,1.188,0.322

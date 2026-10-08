@@ -1,0 +1,73 @@
+{
+  "part1_backward_step": "2013-10-27 01:59:58 -> 2013-10-27 01:00:01",
+  "overlap_window_utc": [
+    "2014-06-27 20:57:49",
+    "2014-10-01 00:27:07"
+  ],
+  "minutes_total": 920031,
+  "minutes_valid_aggregate": 798454,
+  "coverage_pct": 86.79,
+  "long_gaps": 447,
+  "longest_gap_hours": 998.4,
+  "minutes_imputed": 631,
+  "first_minute_utc": "2013-10-09 13:06:00+00:00",
+  "last_minute_utc": "2015-07-10 10:56:00+00:00",
+  "before_after_day": "2014-09-30",
+  "before_after_week_start": "2014-07-04",
+  "validation_aggregate_corr": 0.9993,
+  "validation_wm_corr": 0.9992,
+  "report": [
+    {
+      "step": "Part1: wall-clock -> UTC",
+      "rows": 4377877,
+      "rows_shifted_by_1h": 2795917,
+      "rows_dropped_ambiguous_or_nonexistent": 0,
+      "backward_steps_before": 1
+    },
+    {
+      "step": "Part2: wall-clock -> UTC",
+      "rows": 4140886,
+      "rows_shifted_by_1h": 2253241,
+      "rows_dropped_ambiguous_or_nonexistent": 986,
+      "backward_steps_before": 0
+    },
+    {
+      "step": "resolve Part1/Part2 overlap",
+      "overlap_start_utc": "2014-06-27 20:57:49",
+      "overlap_end_utc": "2014-10-01 00:27:07",
+      "part2_rows_dropped_in_overlap": 945403,
+      "part1_rows_in_overlap": 1257865
+    },
+    {
+      "step": "drop duplicates",
+      "exact_duplicates_removed": 884252,
+      "conflicting_same_time_removed": 131753
+    },
+    {
+      "step": "mask impossible values",
+      "iam_cells_masked": 3222,
+      "aggregate_cells_masked": 59
+    },
+    {
+      "step": "carry event rows forward",
+      "cells_forward_filled": 2328155,
+      "limit_s": 120
+    },
+    {
+      "step": "resample to 1 minute",
+      "minutes": 920031,
+      "minutes_without_readings": 122187
+    },
+    {
+      "step": "fill short gaps / flag long gaps",
+      "short_gaps_filled": 446,
+      "minutes_filled": 631,
+      "long_gaps_flagged": 447,
+      "minutes_in_long_gaps": 121577
+    },
+    {
+      "step": "flag IAM sum > aggregate",
+      "minutes_flagged": 7049
+    }
+  ]
+}

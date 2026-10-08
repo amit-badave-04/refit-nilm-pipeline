@@ -1,0 +1,11 @@
+channel,appliance,minutes_compared,corr,mae_W,energy_mine_kWh,energy_official_kWh
+Aggregate,Aggregate,797699,0.9993,2.99,6368.6,6368.7
+Appliance1,Fridge,796415,0.9981,0.05,234.1,234.0
+Appliance2,Freezer(1),795768,0.9958,0.08,220.5,220.5
+Appliance3,Freezer(2),796313,0.9995,0.06,386.6,386.5
+Appliance4,Washer Dryer,797432,0.9996,0.02,25.1,25.1
+Appliance5,Washing Machine,791749,0.9992,0.13,143.4,143.3
+Appliance6,Dishwasher,797652,0.9998,0.05,149.8,149.8
+Appliance7,Computer,797695,0.9973,0.01,33.1,33.0
+Appliance8,Television Site,796793,0.9996,0.02,77.6,77.6
+Appliance9,Electric Heater,707985,0.9998,0.22,900.9,901.1
