@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 MAX_POINTS = 20_160          # 14 days of 1-minute data per request
 MAX_AGGREGATE_W = 25_000.0   # above a 100 A x 230 V domestic supply: certainly a meter error
-MAX_MISSING_FRACTION = 0.2
+MAX_MISSING_FRACTION = 0.10  # same tolerance as training/evaluation windows
 
 
 class DisaggregationRequest(BaseModel):

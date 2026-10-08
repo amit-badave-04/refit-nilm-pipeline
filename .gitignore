@@ -3,7 +3,7 @@
 *.eml
 Research/
 
-# ---- data (REFIT is CC BY 4.0; fetched by scripts/download_data.py, never committed) ----
+# ---- data (REFIT is CC BY 4.0; fetched by scripts/prepare_data.py, never committed) ----
 Data/
 *.7z
 *.csv

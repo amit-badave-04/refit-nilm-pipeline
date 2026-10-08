@@ -1,6 +1,6 @@
 """Project-wide paths and constants.
 
-Every threshold used anywhere in the analysis lives here (or in configs/*.yaml) so that a
+Every threshold used anywhere in the analysis lives here so that a
 reader can see, in one place, which numbers were chosen and where they came from.
 """
 from __future__ import annotations

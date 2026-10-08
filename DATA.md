@@ -11,7 +11,7 @@ are named next to each claim.
 | | |
 |---|---|
 | Homes | 20 houses near Loughborough, UK, numbered 1–21 (no House 14) |
-| Period | Sep 2013 – Jul 2015 (per house 13–22 months; table `nb02_coverage_quality.csv`) |
+| Period | Sep 2013 – Jul 2015 (per house 13–21 months; table `nb02_coverage_quality.csv`) |
 | Channels | 1 aggregate (current clamp at the meter) + 9 individual appliance monitors (IAM plugs) per house |
 | Quantity / unit | active power, watts; no voltage, current, reactive power or power factor |
 | Sampling | logger polled every 6–8 s; a value was stored only when it changed; sensors not synchronised |
@@ -28,7 +28,7 @@ al. (2020): all nine agree. 19 houses have a washing machine (WM); House 12 has 
 two; Houses 1, 8, 9 and 18 also have a separate washer-dryer.
 
 **Known limitations of REFIT** (dataset paper and README): a network outage in February 2014;
-plug monitors cover only 22–55 % of household consumption, so most load is unmetered; houses
+plug monitors cover only 22–55 % of household consumption (dataset paper), so most load is unmetered; houses
 3, 11 and 21 have rooftop PV; occupants could move plugs between appliances (documented changes
 are listed in the README, e.g. House 13's washing machine was replaced on 25 Mar 2015); IAM
 readings above 4 kW are sensor faults.

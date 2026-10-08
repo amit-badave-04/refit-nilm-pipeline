@@ -11,16 +11,16 @@ home's total 1-minute consumption. Tested on six homes it had never seen:
 |---|---|
 | finds **3 out of 4 washing cycles** in the main test home | invents false cycles when other ~2 kW appliances run (kettles, dishwashers, showers) |
 | estimates total washing energy over a long period within **~30 %** for a typical home | under-estimates the energy of each individual wash (the long low-power part) |
-| tells **when** households wash (time of day, weekday) | varies a lot between homes; one home in six was worse than not predicting at all |
+| times the washes it finds to within ~2 minutes (median, 5 of 6 test homes) | finds between 18 % and 84 % of washes depending on the home; one home in six was worse than not predicting at all |
 
 **Suitable uses.** Portfolio-level insight: share of washing in peak hours, typical wash timing and
 frequency across many homes, identifying households that run many hot washes for targeted advice,
 before/after comparisons over months for groups of homes.
 
 **Not suitable for.** Individual bills or any binding per-home claim; per-wash energy figures;
-15- or 30-minute meter data (the model loses its skill entirely at those resolutions; 1-minute data
-is required); homes with rooftop solar; other countries' appliance stock (e.g. India) without local
-validation.
+15- or 30-minute meter data *as input* (a model fed only such data had no per-interval skill;
+1-minute input is required, though the results can then be reported per 15 or 30 minutes); homes
+with rooftop solar; other countries' appliance stock (e.g. India) without local validation.
 
 ## One energy-saving opportunity: lower wash temperatures
 
@@ -31,7 +31,9 @@ lever than temperature.
 
 **Action.** Offer households with frequent heated washes a "wash at 30 °C / eco programme"
 nudge — in-app message, bill insert or on-demand advice — selected using the model's cycle
-detection (heated washes are the part of the signal the model finds most reliably).
+detection (heated washes are the part of the signal the model finds most reliably). One caution:
+the model can assign heating-level power to unheated washes (seen in a home that mostly washes
+cold), so targeting should be checked against the calibration panel below.
 
 **Expected size (stated assumptions).** Heating energy scales with the temperature rise; with
 ~15 °C inlet water, moving a 40 °C wash to 30 °C cuts its heating energy by ~40 %. With 76 % of energy

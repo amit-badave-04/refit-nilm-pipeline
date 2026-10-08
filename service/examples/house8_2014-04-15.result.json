@@ -1,0 +1,62 @@
+{
+  "note": "REFIT House 8 (unseen test home), 15 Apr 2014; inspected after the model was frozen",
+  "truth_plug_monitor": {
+    "cycles": [
+      {
+        "start": "2014-04-15 03:39:00+00:00",
+        "end": "2014-04-15 04:50:00+00:00",
+        "duration_min": 72,
+        "energy_kwh": 1.258
+      },
+      {
+        "start": "2014-04-15 05:19:00+00:00",
+        "end": "2014-04-15 07:39:00+00:00",
+        "duration_min": 141,
+        "energy_kwh": 1.792
+      }
+    ],
+    "wm_energy_kwh": 3.058
+  },
+  "service_response": {
+    "model_version": "wm-seq2point-ensemble-w81@de0535a63aa6",
+    "summary": {
+      "wm_energy_kwh": 1.043,
+      "aggregate_energy_kwh": 16.991,
+      "wm_share_of_aggregate_pct": 6.14,
+      "cycles": 4
+    },
+    "cycles": [
+      {
+        "start": "2014-04-15T03:40:00Z",
+        "end": "2014-04-15T04:12:00Z",
+        "duration_min": 33,
+        "energy_kwh": 0.265,
+        "peak_w": 900.6
+      },
+      {
+        "start": "2014-04-15T04:25:00Z",
+        "end": "2014-04-15T04:55:00Z",
+        "duration_min": 31,
+        "energy_kwh": 0.033,
+        "peak_w": 152.1
+      },
+      {
+        "start": "2014-04-15T05:21:00Z",
+        "end": "2014-04-15T06:40:00Z",
+        "duration_min": 80,
+        "energy_kwh": 0.462,
+        "peak_w": 1716.6
+      },
+      {
+        "start": "2014-04-15T07:07:00Z",
+        "end": "2014-04-15T07:37:00Z",
+        "duration_min": 31,
+        "energy_kwh": 0.033,
+        "peak_w": 205.3
+      }
+    ],
+    "warnings": [
+      "the first and last 40 minutes are predicted with padded context and are less reliable"
+    ]
+  }
+}

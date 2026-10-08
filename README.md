@@ -22,8 +22,8 @@ Strathclyde, 20 UK homes, 2013–2015).
 | **Washing behaviour** (19 homes, 6,334 cycles) | median wash 68 min, 2.1 kW peak, 0.52 kWh; 76 % of washing energy is water heating; 44 % of washes start 07:00–12:00, 13 % in the 16:00–19:00 peak |
 | **Primary model** | three-seed Seq2Point ensemble, 1-minute input, chosen on the validation home |
 | **Unseen test home (House 8)** | finds 75 % of real cycles; daily energy error 335 Wh/day vs 574 for predicting nothing; total-energy error 28 %; NDE 0.74 (1.0 = predicting zero) |
-| **Six unseen homes (mean)** | NDE 0.83; daily energy error 181 vs 308 Wh/day for predicting nothing; best on every energy metric among all models tried |
-| **Negative results, reported** | an on/off gate made the model worse; distractor augmentation failed its pre-registered acceptance test |
+| **Six unseen homes (mean)** | NDE 0.83 (lowest of all models); daily energy error 181 vs 308 Wh/day for predicting nothing; beats every baseline on every energy metric |
+| **Negative results, reported** | an on/off gate made the model worse; distractor augmentation failed the acceptance rule fixed before training |
 | **15/30-minute data** | a model fed only 15/30-minute data loses all per-interval skill; 1-minute input is required |
 | **Service** | int8 ONNX ensemble (12.7 MB, metric parity with PyTorch) behind a validated FastAPI endpoint, containerised for Fly.io |
 
@@ -40,8 +40,10 @@ Strathclyde, 20 UK homes, 2013–2015).
 3. **Modelling data contract (notebook 03).** The reference REFIT split (train on homes 2, 5, 7, 9,
    15, 16, 17; validate on 18; test on 8) plus five further unseen homes, a seen-home temporal
    test, label-quality masks and a leakage audit.
-4. **Models (notebooks 04–05).** Two floors, a LightGBM baseline, Seq2Point, and one targeted
-   improvement (a state-gated Seq2Point), each deep model trained with three seeds.
+4. **Models (notebooks 04–05b).** Two floors, a LightGBM baseline, Seq2Point, and two targeted
+   changes tested one at a time against it: a state-gated Seq2Point, and training with real
+   distractor-appliance activations after a validation-only diagnosis of the false positives. Each
+   deep model is trained with three seeds; seed ensembles are compared too.
 5. **Evaluation (notebook 06).** Scores on six unseen homes and on later data from the training
    homes, actual-vs-predicted plots, a failure analysis that names the appliances behind false
    detections, and a 15/30-minute resolution study.
@@ -57,17 +59,20 @@ Strathclyde, 20 UK homes, 2013–2015).
 │   ├── cleaning.py        raw-data inspection and cleaning steps
 │   ├── cycles.py          washing-machine activation rule, threshold checks
 │   ├── datasets.py        label masks, splits, leakage-safe window indices, resampling
+│   ├── augment.py         training-time augmentation with real appliance activations
 │   ├── features.py        window features (LightGBM) and usage profile
 │   ├── models/seq2point.py  Seq2Point and gated Seq2Point
 │   ├── train.py           GPU training loop, early stopping, checkpoints
 │   └── metrics.py         MAE, MAE_ON, SAE, NDE, EpD, F1, AUPRC, cycle-level and energy-split metrics
-├── notebooks/             01–06 (.py sources and executed .ipynb)
-├── scripts/               prepare_data.py, run_notebooks.py, export_onnx.py
+├── notebooks/             01–06 incl. 05b (.py sources and executed .ipynb)
+├── scripts/               prepare_data.py, run_notebooks.py, export_onnx.py, check_onnx_parity.py,
+│                          set_summary.py / edit_markdown.py (edit notebook text without re-running)
 ├── tests/                 unit tests for the library
 ├── service/               FastAPI + ONNX inference service, its tests, Dockerfile, fly.toml
-├── artifacts/             versioned outputs: figures, tables, metrics JSON (models are rebuilt, not versioned)
+├── artifacts/             versioned outputs: figures, tables, metrics JSON, training logs (checkpoints are rebuilt, not versioned)
 ├── environment.yml        conda environment
-└── requirements-lock.txt  exact package versions used
+├── requirements-lock.txt  exact package versions used (pip format)
+└── conda-lock-win64.txt   explicit conda lock for Windows
 ```
 
 ## Setup and run
@@ -133,8 +138,9 @@ with. The notebooks are written as percent-format `.py` files (readable diffs) a
 * **Seq2Point over a Transformer.** Seq2Point is the most replicated model on REFIT washing
   machines and trains in minutes, so I could run three seeds of every variant and a resolution
   study. NILMFormer (KDD 2025) reports lower 1-minute washer errors and is the next model to try.
-* **One improvement, isolated.** The gated model changes exactly one thing (an on/off head that
-  gates the output), so its effect can be attributed.
+* **Changes tested one at a time.** The gated model and the augmented model each change exactly one
+  thing relative to Seq2Point, with acceptance decided on the validation home, so their effects can
+  be attributed. Both are reported although neither was adopted.
 * **No NILM framework dependency.** NILMTK is installed from git and nilmtk-contrib pins Python 3.11;
   the components needed here are short and unit-tested, and the protocol follows NILMTK-contrib and
   the papers in `CITATIONS.md`.
@@ -148,14 +154,15 @@ All analysis decisions, verification of results and interpretation are my own.
 
 ## Possible improvements
 
-* **Synthetic-activation augmentation** (Kelly & Knottenbelt 2015; Rafiq et al. 2021): add real
-  washing-machine cycles onto other homes' aggregates to multiply training examples and teach the
-  model to ignore washer-dryers and showers.
+* **Keep the `Issues` minutes as labels** (with a weight): the official flag removes 5–47 % of
+  washing-machine-on minutes in the training homes (RESULTS.md §5).
+* **Distractor-only augmentation** (no washing-machine insertions), three seeds: the version tested
+  here also inserted washing-machine cycles, which raised false energy.
 * **NILMFormer-style models** with per-window normalisation, which also helps with voltage
   differences between markets.
 * **Fine-tuning on a handful of labelled homes** in a new market (freeze the trunk, retrain the
   head), as D'Incecco et al. show for cross-dataset transfer.
-* **Richer electrical inputs** (reactive power, current harmonics) from the meters Flock deploys:
+* **Richer electrical inputs** (reactive power, current harmonics) from in-home or smart meters:
   a washing machine's motor and heater are far easier to separate with reactive power.
 * **Probabilistic outputs and monitoring:** calibrate `P(on)`, track input drift per home, and
   trigger re-validation when a home's appliance stock changes.

@@ -1,4 +1,4 @@
-# Reproduce the whole analysis:  make env  ->  make data  ->  make test  ->  make notebooks
+# Reproduce the whole analysis (after creating the environment, see README):  make data -> make test -> make notebooks
 PY ?= python
 
 .PHONY: data test notebooks export service-test all

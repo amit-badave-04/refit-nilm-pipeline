@@ -5,7 +5,7 @@
   "created_utc": "2026-10-08T20:11:47+00:00",
   "architecture": "seq2point",
   "window": 81,
-  "input": "1-minute whole-home active power (W), UTC-regular, gaps <= 20 %",
+  "input": "1-minute whole-home active power (W), UTC-regular, missing readings <= 10 %",
   "output": "washing-machine active power (W) per minute, and the share of ensemble members that predict the machine is on (>= 20 W)",
   "members": [
     "m2_seq2point_w81_s42",
@@ -57,12 +57,14 @@
       "mean_abs_diff_w": 1.5289291143417358,
       "corr": 0.9967831058159776,
       "windows": 4000
-    }
+    },
+    "parity_set": "4,000 random windows from House 8",
+    "full_house_parity": "artifacts/metrics/onnx_parity.json"
   },
   "intended_use": "Portfolio-level estimates of washing-machine energy and usage timing in UK-like homes.",
   "not_for": [
     "billing or any individually binding decision",
-    "data at 15/30-minute resolution (retrain at that resolution)",
+    "15/30-minute data as input: models trained on such data had no per-interval skill (RESULTS.md section 6); 1-minute input is required",
     "homes with rooftop PV (aggregate distorted)",
     "markets with different appliance stock (e.g. India) without local validation"
   ],

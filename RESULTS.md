@@ -16,8 +16,8 @@ brackets). Data preparation and cleaning decisions are in [`DATA.md`](DATA.md).
   energy within real cycles (the long low-power tail); large differences between homes (NDE 0.42 to
   1.40).
 * **Two negative results, reported as such:** gating the output by an on/off classifier made things
-  worse; training with distractor appliances helped energy-weighted error but failed its
-  pre-registered acceptance test on cycle detection.
+  worse; training with distractor appliances helped energy-weighted error but failed the
+  acceptance rule fixed before training, on cycle detection.
 * **15/30-minute meters.** A model that only sees 15- or 30-minute data loses its skill (worse than
   predicting zero per interval); 1-minute input is what makes washing-machine disaggregation work.
 * **A data finding that matters for anyone using REFIT:** the official `Issues` flag removes 5–47 % of
@@ -29,7 +29,7 @@ brackets). Data preparation and cleaning decisions are in [`DATA.md`](DATA.md).
 
 **Homes and coverage.** 19 of the 20 REFIT homes have a washing-machine monitor (House 12 has
 none); House 4 has two machines in simultaneous use, so 20 machines are analysed. Records span
-13–22 months per home (Sep 2013 – Jul 2015); 75–94 % of minutes carry a reading. Outages appear in
+13–21 months per home (Sep 2013 – Jul 2015); 75–94 % of minutes carry a reading. Outages appear in
 the cleaned release as missing rows or as forward-filled flat lines; both are treated as missing
 [`nb02_coverage_quality.csv`]. The washing machine is drawing less than 20 W in 91–99.7 % of valid
 minutes.
@@ -50,7 +50,7 @@ so it is not used for cycles [`nb02_threshold_check.csv`].
 | duration, median (90th percentile) | 68 min (118 min) |
 | peak power, median | 2.1 kW |
 | energy per cycle, median / mean | 0.52 / 0.55 kWh (UK Household Electricity Survey ≈ 0.58 kWh) |
-| cycles per week, median across machines | 4.0 (range 1.4–11.9) |
+| cycles per week, median across machines | 4.0 (range 1.4–11.9, excluding House 4's rarely used second machine) |
 | share of WM energy drawn above 1.5 kW (water heating) | 76 % |
 | cycles with ≥ 5 minutes of heating | 86 % |
 | median energy, heated vs unheated cycles | 0.57 vs 0.19 kWh |
@@ -113,7 +113,8 @@ normalisation from training targets only; inputs are the aggregate only; all cho
 
 **Why these metrics.** The washing machine is off ~97 % of the time, so MAE rewards predicting
 nothing: on House 8 "always off" has MAE 24.6 W, the best model 23.6 W. I therefore report
-energy-normalised error (**NDE**; 1.0 = predicting zero), total and daily energy error (**SAE**,
+energy-normalised error (**NDE** = sqrt(Σ(ŷ−y)² / Σy²), the square-root form used by NILMTK and
+Klemenjak et al.; 1.0 = predicting zero; some papers report the squared form), total and daily energy error (**SAE**,
 **EpD**), minute-level **F1** at 20 W, **cycle-level** precision/recall/F1 (cycles detected with the
 EDA rule on truth and prediction and matched at temporal IoU ≥ 0.5 — a project-specific metric,
 since NILM has no standard one), and the share of true energy **recovered** vs false energy
@@ -124,10 +125,10 @@ since NILM has no standard one), and the share of true energy **recovered** vs f
 | | model | why |
 |---|---|---|
 | M0a / M0b | always-off; weekday × hour usage profile | metric floors: no signal / behaviour only |
-| M1 | LightGBM on window statistics of the aggregate | strong classical baseline |
+| M1 | LightGBM on window statistics of the aggregate | classical baseline (validation early stopping kept only 21 trees: what it learns does not transfer) |
 | M2 | Seq2Point CNN (Zhang et al. 2018), W = 81 min | the most replicated NILM model on REFIT washing machines; window chosen on validation (81 beat 237) |
 | M3 | Seq2Point with an on/off gate (Shin et al. 2019) | one change aimed at false power while off |
-| M4 | Seq2Point trained with real distractor activations (dishwasher, tumble dryer, washer-dryer, kettle) + sparse WM insertions (Kelly & Knottenbelt 2015; Rafiq et al. 2021) | one change aimed at the diagnosed cause of false positives |
+| M4 | Seq2Point trained with real distractor activations + sparse WM insertions (Kelly & Knottenbelt 2015; Rafiq et al. 2021) | one change aimed at the diagnosed cause of false positives; distractors chosen a priori as the plug-in appliances whose heating elements draw similar power: dishwasher, washer-dryer, tumble dryer, kettle (House 18 has no kettle or tumble-dryer monitor, so they cannot appear in its attribution) |
 | ensembles | mean of the three seeds of M2 / M4 | variance reduction |
 
 **Validation results (House 18)** [`nb04_validation.csv`, `nb05_ablation_val.csv`, `nb05b_comparison_val.csv`]:
@@ -141,17 +142,20 @@ since NILM has no standard one), and the share of true energy **recovered** vs f
 | augmented (M4) | 0.61 ± 0.08 | 0.57 ± 0.08 | 67 % | 168 % |
 | **M2 seed ensemble (primary)** | **0.60** | **0.64** | 62 % | 97 % |
 
-* **The gate (M3) is a negative result.** It peaks after 2–4 epochs and then degrades: the on/off
+* **The gate (M3) is a negative result.** It peaks after 1–4 epochs and then degrades: the on/off
   head learns home-specific cues, and in a new home a confident gate turns an ambiguous 2 kW event
   into a full-power false cycle, where plain Seq2Point hedges.
 * **Diagnosis before the next change.** On House 18, 48 % of Seq2Point's false energy occurs while
   the dishwasher runs (it also heats water at ~2 kW), and about a third is low-level power during
   quiet periods [`nb05b_false_energy_attribution_val.csv`].
-* **Augmentation (M4) failed its pre-registered rule.** It had to beat M2 by more than M2's seed
+* **Augmentation (M4) failed the rule fixed before training.** It had to beat M2 by more than M2's seed
   spread on both NDE (it did: −0.061) and cycle F1 (it did not: −0.034). It recovers more true
   energy but adds much more false energy; the washing-machine insertions likely raised its learned
   on-rate.
 * **Primary model: the M2 seed ensemble**, fixed before the test homes were scored.
+* **Single-seed choices.** The window (81 vs 237) and the M4 setting ("distractors + WM" vs
+  "distractors only", a 0.001 NDE tie) were each chosen on seed 42 alone; the seed spread shows such
+  small differences are not meaningful.
 
 ---
 
@@ -166,7 +170,7 @@ since NILM has no standard one), and the share of true energy **recovered** vs f
 | LightGBM | 1.01 | 0.50 | 531 | 0.05 | 0.02 | 0.02 | 2 % | 48 % |
 | Seq2Point (single) | 0.77 ± 0.01 | 0.28 | 340 | 0.51 | 0.56 ± 0.04 | 0.64 | 37 % | 34 % |
 | gated | 0.77 ± 0.03 | 0.23 | 347 | 0.45 | 0.37 | 0.44 | 41 % | 46 % |
-| augmented | 0.69 ± 0.02 | 0.18 | 309 | 0.45 | 0.53 | 0.82 | 49 % | 53 % |
+| augmented | 0.69 ± 0.02 | 0.17 | 309 | 0.45 | 0.53 | 0.82 | 49 % | 53 % |
 | **Seq2Point ensemble (primary)** | **0.74** | **0.28** | **335** | **0.49** | **0.56** | **0.75** | **38 %** | **34 %** |
 | augmented ensemble | 0.66 | 0.02 | 292 | 0.43 | 0.47 | 0.85 | 49 % | 53 % |
 
@@ -237,14 +241,16 @@ count cycles, not to report energy.
   minutes [`issues_flag_vs_wm_on_trainval.csv`]. I followed the README and excluded flagged minutes;
   this thinned the positive labels and fragmented true cycles. On House 1, scoring against my own
   cleaning of the raw data (flag computed on 1-minute means) gives cycle F1 0.38 vs 0.17 on the
-  official release, although the two label series agree on on/off state in all but 72 minutes
-  [`nb06_house1_official_vs_mine.csv`]. For House 8 (low flag rate) including the flagged minutes
+  official release, although the two label series agree on on/off state in all but 72 of 792,849
+  minutes; the official usable targets hold 61 kWh of washing energy against 115 kWh in mine
+  [`nb06_house1_official_vs_mine.csv`, `house1_label_agreement.json`]. For House 8 (low flag rate) including the flagged minutes
   changes NDE only from 0.737 to 0.726. **First change for a next version:** keep these minutes and
   use the flag as a weight, re-validated from scratch.
 * **Appliance changes.** House 13 (machine replaced) and House 4 (two machines) were excluded. A
   replaced machine with a different heater or programmes shifts the signature; the model would need
   re-validation, which is why the service's model card lists it as a limit.
-* **Unmetered loads.** Plug monitors explain only 20–53 % of each home's energy; the rest is
+* **Unmetered loads.** Plug monitors explain only 20–53 % of each modelled home's energy (100 − NAR;
+  the dataset paper reports 22–55 % across all homes); the rest is
   invisible to labelling and is the largest source of false cycles (section 4).
 
 ## 6. What 15- or 30-minute data would change (Requirement 4)
@@ -256,15 +262,19 @@ count cycles, not to report energy.
 | primary model, 1-minute input | 1 min | 0.83 | 181 | 0.51 |
 | same, output averaged | 15 min | 0.92 | 173 | 0.51 |
 | same, output averaged | 30 min | 0.87 | 176 | 0.52 |
-| Seq2Point trained on 15-minute input | 15 min | 1.27 | 274 | 0.22 |
-| Seq2Point trained on 30-minute input | 30 min | 1.14 | 264 | 0.23 |
+| Seq2Point seed 42, 1-minute input, output averaged | 15 min | 1.00 | 178 | 0.50 |
+| Seq2Point seed 42, 1-minute input, output averaged | 30 min | 0.94 | 182 | 0.51 |
+| Seq2Point seed 42 trained on 15-minute input | 15 min | 1.27 | 274 | 0.22 |
+| Seq2Point seed 42 trained on 30-minute input | 30 min | 1.14 | 264 | 0.23 |
 | always-off | any | 1.00 | 308 | 0 |
 
 ![one cycle at three resolutions](artifacts/figures/nb06_cycle_at_three_resolutions.png)
 
 At 15–30 minutes a 2 kW, 15-minute heating block becomes one or two averaged values that look like
 any other load, and the tail disappears. A model that only sees such data has no per-interval skill
-(worse than predicting zero) and roughly halves its advantage on daily energy. This matches the
+(worse than predicting zero) and keeps only about a quarter to a third of the 1-minute model's
+advantage on daily energy (34–44 of 127 Wh/day over always-off). The fair single-seed comparison
+(seed 42 both ways) shows the same gap. This matches the
 literature: washing-machine *detection* at 30 minutes reaches only ~0.6 macro-F1 even as a
 day-level classification task (Petralia et al. 2023), and hourly disaggregation works only for
 coarse energy totals (Zhao et al. 2020). With 15/30-minute utility data the realistic products are
@@ -295,6 +305,9 @@ coarse energy totals (Zhao et al. 2020). With 15/30-minute utility data the real
   amplitude normalisation and voltage-scaling augmentation.
 * **Sample size.** Seven training homes, one validation home and six test homes from one town in
   2013–2015; results on a different housing stock or appliance generation may differ.
+* **Ownership figure for India** (~29 % urban, ~6 % rural) is from the CEEW India Residential Energy
+  Survey 2020 as summarised by the Bureau of Energy Efficiency; CEEW notes that such surveys
+  under-report wealth-linked appliances.
 
 ## 8. What I would do next, in order
 
@@ -303,5 +316,5 @@ coarse energy totals (Zhao et al. 2020). With 15/30-minute utility data the real
    for M4's inflated on-rate.
 3. A Transformer with per-window normalisation (NILMFormer, KDD 2025), which reports lower 1-minute
    errors on REFIT.
-4. Add reactive power / current features from Flock's own meters, where available.
+4. Add reactive power / current features from in-home meters, where available.
 5. A calibrated probability head and per-home drift monitoring in the service.

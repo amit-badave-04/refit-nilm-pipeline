@@ -123,7 +123,7 @@ def main() -> None:
         "created_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "architecture": cfg.model,
         "window": W,
-        "input": "1-minute whole-home active power (W), UTC-regular, gaps <= 20 %",
+        "input": "1-minute whole-home active power (W), UTC-regular, missing readings <= 10 %",
         "output": "washing-machine active power (W) per minute, and the share of ensemble members that predict the machine is on (>= 20 W)",
         "members": [Path(c).stem for c in args.checkpoint],
         "training_data": {
@@ -133,11 +133,11 @@ def main() -> None:
         "standardisation": stats,
         "training_config": {k: v for k, v in cfg.__dict__.items() if k != "seed"},
         "seeds": [l[1].seed for l in loaded],
-        "quantisation": {"type": "dynamic int8 weights, per-channel scales", "parity_vs_fp32": parity},
+        "quantisation": {"type": "dynamic int8 weights, per-channel scales", "parity_set": "4,000 random windows from House 8", "parity_vs_fp32": parity, "full_house_parity": "artifacts/metrics/onnx_parity.json"},
         "intended_use": "Portfolio-level estimates of washing-machine energy and usage timing in UK-like homes.",
         "not_for": [
             "billing or any individually binding decision",
-            "data at 15/30-minute resolution (retrain at that resolution)",
+            "15/30-minute data as input: models trained on such data had no per-interval skill (RESULTS.md section 6); 1-minute input is required",
             "homes with rooftop PV (aggregate distorted)",
             "markets with different appliance stock (e.g. India) without local validation",
         ],

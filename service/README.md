@@ -26,7 +26,8 @@ Request body:
 
 Validation at the boundary (HTTP 422 with a reason): timezone-aware `start`; `interval_seconds`
 must be 60; 81 to 20,160 readings (one window to 14 days); values within 0–25,000 W; `null` allowed
-for missing readings up to 20 %; unknown fields rejected. Bodies over 2 MB are refused (413) and
+for missing readings up to 10 % (the same tolerance the model was trained and evaluated with);
+unknown fields rejected. Bodies over 2 MB are refused (413) and
 each client is limited to 30 requests a minute (429).
 
 Response fields: `wm_power_w` (one value per input minute), `wm_on_agreement` (share of the three
@@ -42,7 +43,9 @@ uvicorn app.main:app --port 8080
 curl -s -X POST localhost:8080/v1/disaggregate -H "content-type: application/json" --data-binary @examples/house8_2014-04-15.json
 ```
 
-`examples/house8_2014-04-15.json` is one real day from REFIT House 8 (an unseen test home). On that
+`examples/house8_2014-04-15.json` is one real day from REFIT House 8 (an unseen test home),
+inspected only after the model was frozen; the request, response and plug-monitor truth are saved in
+`examples/house8_2014-04-15.result.json`. On that
 day the plug monitor recorded two washes (03:39–04:50 and 05:19–07:39 UTC, 3.05 kWh in total). The
 service returns four cycles, all inside those two washes: each wash is split where the predicted
 low-power tail dips below 20 W, and the predicted energy is 1.04 kWh. Both behaviours match the

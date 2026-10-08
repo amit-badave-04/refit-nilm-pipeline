@@ -55,7 +55,7 @@ print(SUMMARY)
 
 # %% [markdown]
 # **Primary model.** Chosen on the validation house before this notebook was run: the M4 seed
-# ensemble if augmentation passed its pre-registered acceptance rule in notebook 05b, otherwise
+# ensemble if augmentation passed the acceptance rule fixed in notebook 05b before training, otherwise
 # the M2 seed ensemble.
 
 # %% [markdown]
@@ -496,7 +496,7 @@ print("saved")
 # | LightGBM | 1.01 | 0.50 | 531 | 0.05 | 0.02 | 0.02 | 2 % | 48 % |
 # | Seq2Point (single) | 0.77 ± 0.01 | 0.28 | 340 | 0.51 | 0.56 ± 0.04 | 0.64 | 37 % | 34 % |
 # | gated Seq2Point | 0.77 ± 0.03 | 0.23 | 347 | 0.45 | 0.37 | 0.44 | 41 % | 46 % |
-# | augmented Seq2Point | 0.69 ± 0.02 | 0.18 | 309 | 0.45 | 0.53 | 0.82 | 49 % | 53 % |
+# | augmented Seq2Point | 0.69 ± 0.02 | 0.17 | 309 | 0.45 | 0.53 | 0.82 | 49 % | 53 % |
 # | **Seq2Point ensemble (primary)** | **0.74** | **0.28** | **335** | **0.49** | **0.56** | **0.75** | **38 %** | **34 %** |
 # | augmented ensemble | 0.66 | 0.02 | 292 | 0.43 | 0.47 | 0.85 | 49 % | 53 % |
 #
@@ -529,7 +529,7 @@ print("saved")
 #
 # **A label-quality problem found here (most important lesson).** On House 1, scoring against my own
 # cleaning of the raw files gives cycle F1 0.38, against 0.17 on the official release. The two
-# series agree minute by minute (≤ 39 minutes differ in on/off state); the difference is the
+# series agree minute by minute (72 of 792,849 minutes differ in on/off state); the difference is the
 # `Issues` flag. In the official release it fires whenever any 8-second row in a minute has the plug
 # monitors summing above the aggregate, which happens precisely when a large appliance switches. It
 # therefore removes washing minutes far more often than other minutes: in the training and validation
@@ -551,8 +551,11 @@ print("saved")
 #
 # ## Verification log
 #
-# * House 8 was not used for any choice. An earlier run of this notebook was stopped when I decided
-#   to add the augmented model; its partial outputs were deleted without being opened.
+# * House 8 was not used for any choice. I started this notebook once before the augmented model
+#   existed and stopped it after a few minutes, when I decided to run one more validation-only
+#   experiment; that decision followed the gated model's negative validation result in notebook 05,
+#   and the diagnosis that shaped it (notebook 05b) used House 18 only. Nothing from the stopped run
+#   was printed or opened, and its files were deleted.
 # * The primary model was fixed in notebook 05b (`nb05b_summary.json`, `accepted: false` → M2
 #   ensemble) before this notebook ran.
 # * Spot checks: the three-day House 8 plot shows the ensemble catching the heating blocks and

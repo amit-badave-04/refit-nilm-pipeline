@@ -156,7 +156,7 @@ with open(C.METRIC_DIR / "nb05_summary.json", "w") as fh:
 # **Verdict: the gate made things worse, on every metric, and less stable across seeds.** This is
 # a negative result, and it is reported as one.
 #
-# **Why, mechanistically.** The gated models reach their best validation score after only 2–4
+# **Why, mechanistically.** The gated models reach their best validation score after only 1–4
 # epochs and then degrade, while plain Seq2Point keeps improving for ~10. The on/off head learns
 # home-specific cues quickly; in an unseen home, a *confident* gate turns an ambiguous 2 kW event
 # into a full-power false cycle. Plain Seq2Point, trained with MSE, hedges on the same event with a

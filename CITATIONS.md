@@ -81,6 +81,14 @@ REFIT data unless stated, so they are context, not a leaderboard for my 1-minute
     installed from git and nilmtk-contrib pins Python 3.11; the few pieces needed here are short and
     unit-tested.
 
+24. **Rafiq, H., Shi, X., Zhang, H., Li, H., Ochani, M. K., Shah, A. A. (2021).** Generalizability
+    improvement of deep learning-based non-intrusive load monitoring system using data augmentation.
+    *IEEE Trans. Smart Grid* 12(4):3265–3277. doi:10.1109/TSG.2021.3082622.
+    *Adopted:* building training examples from real recorded activations to improve unseen-home
+    generalisation (my M4, which uses distractor appliances), and the split of predicted energy into
+    overlapping, missing and extra energy. Its datasets and per-appliance results were not checked
+    (full text not accessed).
+
 ## Resolution, savings and transfer
 
 17. **Petralia, A., Charpentier, P., Boniol, P., Palpanas, T. (2023).** Appliance detection using
@@ -107,6 +115,9 @@ REFIT data unless stated, so they are context, not a leaderboard for my 1-minute
 23. **Batra, N., Gulati, M., Singh, A., Srivastava, M. (2013).** It's different: insights into home
     energy consumption in India. *ACM BuildSys '13* (iAWE dataset).
     *Used for:* Indian supply conditions (230 V nominal, 180–260 V measured, long outages).
+25. **Council on Energy, Environment and Water (2020).** India Residential Energy Survey (IRES),
+    as summarised by the Bureau of Energy Efficiency (2026).
+    *Used for:* washing-machine ownership in India (~29 % urban, ~6 % rural).
 
 ## Considered and not adopted
 
@@ -114,5 +125,5 @@ REFIT data unless stated, so they are context, not a leaderboard for my 1-minute
   stated sampling rate inconsistent with REFIT.
 * **DiffNILM** (*Sensors* 2023) and LLM-prompting NILM (arXiv 2025): weaker or unreported on REFIT
   washing machines at the time of writing.
-* **Data augmentation with synthetic activations** (Kelly & Knottenbelt 2015; Rafiq et al., *IEEE
-  TSG* 2021): promising for unseen homes; listed as a next step.
+* **Transformer models** (e.g. NILMFormer, item 5): not built in this version; listed as a next
+  step.

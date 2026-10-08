@@ -1,0 +1,18 @@
+{
+  "joint_minutes_both_labels_present": 792849,
+  "official_on_mine_off": 33,
+  "official_off_mine_on": 39,
+  "usable_target_minutes": {
+    "official": 784850,
+    "mine": 785024
+  },
+  "wm_energy_in_usable_targets_kwh": {
+    "official": 61.0,
+    "mine": 115.5
+  },
+  "issues_minutes": {
+    "official": 16686,
+    "mine": 7049
+  },
+  "minutes_on_off_disagree": 72
+}
