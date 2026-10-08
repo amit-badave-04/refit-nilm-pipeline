@@ -1,0 +1,38 @@
+{
+  "machines": 20,
+  "houses": 19,
+  "cycles_total": 6552,
+  "cycles_clean": 6334,
+  "cycles_flagged_missing": 182,
+  "cycles_flagged_too_long": 40,
+  "cycles_flagged_over_max": 0,
+  "pooled": {
+    "duration_min_median": 68.0,
+    "duration_min_p90": 118.0,
+    "peak_w_median": 2095.894444444444,
+    "energy_kwh_median": 0.5216165277777778,
+    "energy_kwh_mean": 0.5460873943027365,
+    "heating_share_of_energy": 0.7577894684902121,
+    "cycles_per_week_median": 3.96
+  },
+  "representative_day": {
+    "house": 2,
+    "day": "2014-11-11",
+    "cycle_kwh": 0.601
+  },
+  "timing": {
+    "weekend_share_of_cycles_pct": 32.6,
+    "weekend_days_share_pct": 28.6,
+    "peak_16_19_share_of_cycles_pct": 12.9,
+    "peak_16_19_share_of_energy_pct": 13.0,
+    "weekday_peak_16_19_share_of_energy_pct": 9.2,
+    "morning_7_12_share_of_cycles_pct": 44.2,
+    "night_22_7_share_of_cycles_pct": 12.2
+  },
+  "heating": {
+    "share_of_WM_energy_in_heating_minutes_pct": 75.8,
+    "cycles_with_heating_ge5min_pct": 85.7,
+    "median_kwh_hot_cycles": 0.566,
+    "median_kwh_cold_cycles": 0.193
+  }
+}

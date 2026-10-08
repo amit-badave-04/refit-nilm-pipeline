@@ -54,7 +54,8 @@ LOCAL_TZ = "Europe/London"
 WM_ON_THRESHOLD_W = 20.0      # on if power >= 20 W
 WM_MIN_OFF_MIN = 3            # bridge off-gaps shorter than 160 s (-> 3 one-minute samples)
 WM_MIN_ON_MIN = 30            # discard activations shorter than 1800 s
-WM_MAX_POWER_W = 2500.0       # Kelly's max power for a washer; values above are flagged, not deleted
+WM_MAX_POWER_W = 3120.0       # 13 A x 240 V: the most a plug-in appliance can draw. Kelly's 2500 W
+                              # flags real 2.55 kW heaters (House 4), so the physical limit is used.
 
 # --- 1-minute protocol (Petralia et al., KDD 2025) ----------------------------------------
 RESAMPLE_RULE = "1min"

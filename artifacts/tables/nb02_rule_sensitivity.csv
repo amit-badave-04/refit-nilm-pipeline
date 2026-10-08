@@ -1,0 +1,6 @@
+,cycles (all machines),vs chosen (%)
+"Kelly: 20 W, off<3, on≥30 (chosen)",6552,0.0
+10 W threshold,6696,2.2
+50 W threshold,6087,-7.1
+"NILMTK metadata: off<5, on≥10",7499,14.5
+off<10 (merge soak pauses),6565,0.2
