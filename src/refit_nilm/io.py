@@ -12,9 +12,11 @@ Design notes
 from __future__ import annotations
 
 import hashlib
+import os
 import re
 import shutil
 import subprocess
+import sys
 import urllib.request
 from pathlib import Path
 
@@ -57,8 +59,11 @@ def ensure_archive(key: str, data_dir: Path = C.DATA_DIR) -> Path:
 
 
 def find_7z() -> str:
+    """7-Zip executable: on PATH, or inside the running Python environment (works without
+    activating the conda environment)."""
+    env_dirs = [Path(sys.prefix) / d for d in ("bin", "Library/bin", "Scripts")]
     for name in ("7z", "7zz", "7za"):
-        exe = shutil.which(name)
+        exe = shutil.which(name) or shutil.which(name, path=os.pathsep.join(map(str, env_dirs)))
         if exe:
             return exe
     raise FileNotFoundError("7-Zip not found; install the conda-forge '7zip' package")
