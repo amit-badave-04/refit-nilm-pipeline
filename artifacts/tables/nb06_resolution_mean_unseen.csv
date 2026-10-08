@@ -1,0 +1,9 @@
+evaluated at,model,mae_w,nde,sae,epd_wh,f1,precision,recall
+1 min,M2 Seq2Point ensemble (1-min),13.092,0.825,0.312,181.24,0.507,0.411,0.728
+1 min,M2 Seq2Point s42 (1-min),13.507,0.894,0.325,186.013,0.486,0.4,0.672
+15 min,"M2 Seq2Point ensemble (1-min), averaged to 15 min",11.719,0.921,0.477,173.261,0.508,0.403,0.746
+15 min,"M2 Seq2Point s42 (1-min), averaged to 15 min",12.068,0.998,0.505,177.921,0.496,0.391,0.725
+15 min,M2 Seq2Point s42 trained on 15-min data,20.176,1.273,0.973,274.356,0.219,0.168,0.377
+30 min,"M2 Seq2Point ensemble (1-min), averaged to 30 min",11.424,0.874,0.455,176.43,0.517,0.411,0.741
+30 min,"M2 Seq2Point s42 (1-min), averaged to 30 min",11.78,0.943,0.483,181.791,0.507,0.401,0.727
+30 min,M2 Seq2Point s42 trained on 30-min data,18.194,1.136,0.603,264.354,0.225,0.158,0.447

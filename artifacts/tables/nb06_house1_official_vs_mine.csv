@@ -1,0 +1,5 @@
+model,data,mae_w,nde,sae,epd_wh,f1,cycle_f1
+M2 Seq2Point ensemble,official cleaned,7.609,0.859,0.261,93.962,0.321,0.174
+M2 Seq2Point ensemble,my cleaning of raw,10.445,0.779,0.16,149.56,0.388,0.376
+M4 augmented ensemble,official cleaned,8.675,0.801,0.621,100.997,0.329,0.234
+M4 augmented ensemble,my cleaning of raw,11.282,0.726,0.05,143.414,0.401,0.464

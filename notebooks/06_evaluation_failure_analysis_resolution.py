@@ -484,4 +484,79 @@ print("saved")
 # %% [markdown]
 # ## Summary
 #
-# _Filled in after execution._
+# **Primary model: the Seq2Point seed ensemble (M2), chosen on the validation house before this
+# notebook was run.** House 8 was scored once.
+#
+# **House 8** (reference unseen test home; single deep models: mean of 3 seeds):
+#
+# | model | NDE | SAE | EpD (Wh/day) | F1 | cycle F1 | cycle recall | true energy recovered | extra energy |
+# |---|---|---|---|---|---|---|---|---|
+# | always-off | 1.00 | 1.00 | 574 | 0 | 0 | 0 | 0 % | 0 % |
+# | weekday × hour profile | 1.00 | 0.35 | 536 | 0.05 | 0.03 | 0.08 | 2 % | 63 % |
+# | LightGBM | 1.01 | 0.50 | 531 | 0.05 | 0.02 | 0.02 | 2 % | 48 % |
+# | Seq2Point (single) | 0.77 ± 0.01 | 0.28 | 340 | 0.51 | 0.56 ± 0.04 | 0.64 | 37 % | 34 % |
+# | gated Seq2Point | 0.77 ± 0.03 | 0.23 | 347 | 0.45 | 0.37 | 0.44 | 41 % | 46 % |
+# | augmented Seq2Point | 0.69 ± 0.02 | 0.18 | 309 | 0.45 | 0.53 | 0.82 | 49 % | 53 % |
+# | **Seq2Point ensemble (primary)** | **0.74** | **0.28** | **335** | **0.49** | **0.56** | **0.75** | **38 %** | **34 %** |
+# | augmented ensemble | 0.66 | 0.02 | 292 | 0.43 | 0.47 | 0.85 | 49 % | 53 % |
+#
+# **All six unseen homes (mean).** Primary model: NDE 0.83 (always-off 1.00), daily energy error
+# 181 Wh/day (always-off 308), total-energy error SAE 0.31, minute F1 0.51, cycle F1 0.48. Skill
+# varies widely by home: NDE 0.42 in House 6, 0.71–0.86 in Houses 1, 8, 10 and 20, and 1.40 in
+# House 19, which mostly runs low-power, unheated washes that the model over-predicts.
+#
+# **Seen vs unseen.** NDE rises from 0.57 on later data of the training homes to 0.83 on new homes
+# (generalisation loss 45 %); F1 falls from 0.61 to 0.51. Most of the error is about *new homes*,
+# not about time.
+#
+# **What the models get right and wrong (House 8, primary model).**
+# * It finds **75 % of real cycles** (232 of 310). The 78 it misses are smaller (median 0.46 kWh vs
+#   0.76 kWh for the cycles it finds).
+# * It produces **281 false cycles**; at those times the largest metered appliance is usually
+#   nothing at all (193, i.e. unmetered load such as showers or cooking), then the kettle (32),
+#   washer-dryer (19) and microwave (19).
+# * Within the cycles it finds, it **under-predicts energy by 59 %**: the heating block is found,
+#   the long low-power tail is largely missed. The days plot shows exactly this.
+# * Daily energy: r = 0.74 between predicted and actual kWh per day.
+#
+# **Post-processing.** The activation filter cuts false energy from 59 % to 17 % of true energy and
+# raises minute precision from 0.41 to 0.54, at the cost of recovered energy (42 % → 28 %). It suits
+# cycle counting, not energy reporting.
+#
+# **The augmented model**, rejected on validation, is better than the primary model on House 8
+# (NDE 0.66, total energy almost exact) but worse on the six-home mean (NDE 0.91 vs 0.83) and
+# predicts twice the false energy. The validation decision holds up on the broader test set.
+#
+# **A label-quality problem found here (most important lesson).** On House 1, scoring against my own
+# cleaning of the raw files gives cycle F1 0.38, against 0.17 on the official release. The two
+# series agree minute by minute (≤ 39 minutes differ in on/off state); the difference is the
+# `Issues` flag. In the official release it fires whenever any 8-second row in a minute has the plug
+# monitors summing above the aggregate, which happens precisely when a large appliance switches. It
+# therefore removes washing minutes far more often than other minutes: in the training and validation
+# homes it covers 1–8 % of all minutes but **5–47 % of washing-machine-on minutes**, and **5–50 % of
+# washing-machine energy** (`artifacts/tables/issues_flag_vs_wm_on_trainval.csv`). Excluding those
+# minutes, as the README suggests, fragments true cycles and thins the positive labels. For House 8,
+# whose flag rate is low, including them changes little (NDE 0.737 → 0.726). The first change for a
+# next version is to keep these minutes and use the flag as a weight or feature, re-validated from
+# scratch.
+#
+# **15- and 30-minute data.** Averaging a 1-minute model's output to 15 or 30 minutes keeps its skill
+# (six-home NDE 0.87–0.92, daily error ~175 Wh/day). A model that only *sees* 15- or 30-minute data
+# loses it: NDE 1.14–1.27 (worse than predicting zero), daily error ~270 Wh/day, interval F1 0.22.
+# On House 8 the coarse-input models' daily error (~500 Wh/day) is close to always-off (574). At
+# these resolutions a 2 kW, 15-minute heating block becomes one or two averaged values
+# indistinguishable from other loads (figure above). Per-interval disaggregation of washing machines
+# from 15/30-minute smart-meter data is not viable with this approach; usage-day detection and
+# monthly energy estimates are the realistic products at that resolution.
+#
+# ## Verification log
+#
+# * House 8 was not used for any choice. An earlier run of this notebook was stopped when I decided
+#   to add the augmented model; its partial outputs were deleted without being opened.
+# * The primary model was fixed in notebook 05b (`nb05b_summary.json`, `accepted: false` → M2
+#   ensemble) before this notebook ran.
+# * Spot checks: the three-day House 8 plot shows the ensemble catching the heating blocks and
+#   missing the low-power tails, consistent with the −59 % matched-energy bias; the resolution figure
+#   shows the heating block smeared into averaged values.
+# * The House 1 discrepancy was traced to the `Issues` flag by comparing the two label series minute
+#   by minute before attributing it.
