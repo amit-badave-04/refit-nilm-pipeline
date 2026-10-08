@@ -13,7 +13,19 @@ Strathclyde, 20 UK homes, 2013–2015).
 | [`CITATIONS.md`](CITATIONS.md) | the research used and what was adopted from each paper |
 | `notebooks/` | the analysis, in order; each notebook has a header, reasons before each step, and a closing summary |
 
-<!-- RESULTS-AT-A-GLANCE -->
+## Results at a glance
+
+| | |
+|---|---|
+| **Data finding** | REFIT's raw timestamps are UK wall-clock time, not UTC, and the official cleaned files revert to wall-clock time after 1 Oct 2014; corrected throughout. The official `Issues` flag removes 5–47 % of washing-machine-on minutes. |
+| **Cleaning** | my raw-data pipeline for House 1 reproduces the official cleaned release at r = 0.999 (aggregate and washing machine) |
+| **Washing behaviour** (19 homes, 6,334 cycles) | median wash 68 min, 2.1 kW peak, 0.52 kWh; 76 % of washing energy is water heating; 44 % of washes start 07:00–12:00, 13 % in the 16:00–19:00 peak |
+| **Primary model** | three-seed Seq2Point ensemble, 1-minute input, chosen on the validation home |
+| **Unseen test home (House 8)** | finds 75 % of real cycles; daily energy error 335 Wh/day vs 574 for predicting nothing; total-energy error 28 %; NDE 0.74 (1.0 = predicting zero) |
+| **Six unseen homes (mean)** | NDE 0.83; daily energy error 181 vs 308 Wh/day for predicting nothing; best on every energy metric among all models tried |
+| **Negative results, reported** | an on/off gate made the model worse; distractor augmentation failed its pre-registered acceptance test |
+| **15/30-minute data** | a model fed only 15/30-minute data loses all per-interval skill; 1-minute input is required |
+| **Service** | int8 ONNX ensemble (12.7 MB, metric parity with PyTorch) behind a validated FastAPI endpoint, containerised for Fly.io |
 
 ## What I built
 
