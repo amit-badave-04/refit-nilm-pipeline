@@ -6,16 +6,20 @@ A small production-style service around the primary model (three-seed Seq2Point 
 window). It takes 1-minute whole-home active power and returns the estimated washing-machine power,
 an agreement score, detected cycles and a summary.
 
-* **Model:** `model/model.onnx` (int8 weights, 12.6 MB) with standardisation and ensembling inside
-  the graph, so the image needs only onnxruntime + numpy (no PyTorch). `model/model_card.json` holds
-  training data, validation and test scores, and limits of use; its SHA-256 is checked at start-up.
-* **Parity:** on all of House 8 the int8 model scores NDE 0.740 / cycle F1 0.569 vs 0.737 / 0.564
+* **Model:** `model/model.onnx` (12.9 MB) with standardisation and ensembling inside the graph, so
+  the image needs only onnxruntime + numpy (no PyTorch). The dense layers, 99 % of the weights, are
+  int8 (dynamic, per-channel). The convolutions stay fp32: on the server CPU (AVX2, no VNNI)
+  onnxruntime's int8 convolutions made a day of data take 6.8–8.4 s, against 1.5–1.8 s this way.
+  `model/model_card.json` holds training data, validation and test scores, and limits of use; its
+  SHA-256 is checked at start-up.
+* **Parity:** on all of House 8 the quantised model scores NDE 0.737 / cycle F1 0.566 vs 0.737 / 0.564
   for the PyTorch ensemble (`artifacts/metrics/onnx_parity.json`).
 
 ## Endpoints
 
 | method | path | purpose |
 |---|---|---|
+| GET | `/` | redirects to the interactive docs (`/docs`), which carry a prefilled real example |
 | GET | `/health` | liveness and loaded model version |
 | GET | `/model` | model card |
 | POST | `/v1/disaggregate` | 1-minute aggregate (W) → washing-machine power (W), cycles, summary |
@@ -49,8 +53,9 @@ curl -s -X POST localhost:8080/v1/disaggregate -H "content-type: application/jso
 inspected only after the model was frozen; the request, response and plug-monitor truth are saved in
 `examples/house8_2014-04-15.result.json`. On that
 day the plug monitor recorded two washes (03:39–04:50 and 05:19–07:39 UTC, 3.05 kWh in total). The
-service returns four cycles, all inside those two washes: each wash is split where the predicted
-low-power tail dips below 20 W, and the predicted energy is 1.04 kWh. Both behaviours match the
+service returns four cycles, two per wash: each wash is split where the predicted low-power tail
+dips below 20 W, and the second piece of the first wash runs 14 minutes past its recorded end. The
+predicted energy is 1.01 kWh. Both behaviours match the
 evaluation (cycles found reliably, tail energy under-estimated). Bridging longer gaps in predicted
 cycles was tested on the validation home only and made cycle detection worse
 (`artifacts/tables/service_cycle_postprocessing_val.csv`), so the analysis rule is kept.
@@ -79,17 +84,21 @@ Try the deployed service with the real example:
 curl -s -X POST https://refit-wm-nilm.fly.dev/v1/disaggregate -H "content-type: application/json" --data-binary @examples/house8_2014-04-15.json
 ```
 
-`fly.toml` runs shared-CPU machines with 512 MB in London (`lhr`); Fly creates two for availability,
-stops them when idle and starts one on the next request (the first call after idling takes a few
-seconds), and health-checks `/health`. The image runs as a non-root user.
+`fly.toml` runs dedicated-core machines (`performance-1x`, 2 GB) in London (`lhr`). Fly creates two
+for availability, stops them when idle and starts one on the next request, and health-checks
+`/health`. Each machine takes at most four requests at once; beyond two in flight the proxy prefers,
+and if needed starts, the other machine. Machines are billed only while running. The image runs as a
+non-root user.
 
 ## Operational notes and limits
 
-* Measured latency for a one-day request (1,440 windows, three-model ensemble): ~1.0 s of CPU time
-  on one laptop core; 7–11 s end to end on the default `shared-cpu-1x` machine, whose CPU share is
-  throttled under sustained load; `/health` answers in ~0.55 s from India. `flyctl scale vm
-  performance-1x` gives a dedicated core (~1–2 s per day of data) and allows a larger `MAX_POINTS`.
-  The first request after the machine has auto-stopped adds ~4 s of start-up.
+* Measured latency, one-day request (1,440 windows, three-model ensemble), called from India:
+  1.5–1.8 s end to end, of which ~0.95 s is server time. The six-hour example in `/docs` takes
+  0.7–0.8 s (~0.23 s server time). The first request after the machines have auto-stopped adds ~5 s
+  of start-up.
+* A day of data used to take 7–11 s on a shared core. Moving to a dedicated core alone left it at
+  5–10 s. Profiling on the machine traced the time to the int8 convolutions, and keeping them in fp32
+  (see above) brought it to the figures above.
 * Logs are one JSON line per request (path, status, latency, body size) and never contain the
   submitted data.
 * The rate limiter is in-memory, i.e. per machine; a multi-machine deployment would move it to a

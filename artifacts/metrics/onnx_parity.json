@@ -9,17 +9,17 @@
     "cycle_recall": 0.7484
   },
   "onnx_int8": {
-    "mae_w": 23.874,
-    "nde": 0.7402,
-    "sae": 0.2763,
-    "epd_wh": 336.8766,
-    "f1": 0.4926,
-    "cycle_f1": 0.5693,
-    "cycle_recall": 0.7548
+    "mae_w": 23.6635,
+    "nde": 0.737,
+    "sae": 0.2827,
+    "epd_wh": 335.6242,
+    "f1": 0.4944,
+    "cycle_f1": 0.5662,
+    "cycle_recall": 0.7516
   },
   "per_minute": {
-    "mean_abs_diff_w": 1.652642011642456,
-    "p99_abs_diff_w": 38.01270294189453,
-    "max_abs_diff_w": 594.4368286132812
+    "mean_abs_diff_w": 0.29207754135131836,
+    "p99_abs_diff_w": 4.313782691955566,
+    "max_abs_diff_w": 38.6588134765625
   }
 }

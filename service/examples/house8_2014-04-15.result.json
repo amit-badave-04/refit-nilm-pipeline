@@ -18,11 +18,11 @@
     "wm_energy_kwh": 3.058
   },
   "service_response": {
-    "model_version": "wm-seq2point-ensemble-w81@de0535a63aa6",
+    "model_version": "wm-seq2point-ensemble-w81@5e852a4c3d56",
     "summary": {
-      "wm_energy_kwh": 1.043,
+      "wm_energy_kwh": 1.014,
       "aggregate_energy_kwh": 16.991,
-      "wm_share_of_aggregate_pct": 6.14,
+      "wm_share_of_aggregate_pct": 5.97,
       "cycles": 4
     },
     "cycles": [
@@ -30,29 +30,29 @@
         "start": "2014-04-15T03:40:00Z",
         "end": "2014-04-15T04:12:00Z",
         "duration_min": 33,
-        "energy_kwh": 0.265,
-        "peak_w": 900.6
+        "energy_kwh": 0.234,
+        "peak_w": 817.2
       },
       {
         "start": "2014-04-15T04:25:00Z",
-        "end": "2014-04-15T04:55:00Z",
-        "duration_min": 31,
-        "energy_kwh": 0.033,
-        "peak_w": 152.1
+        "end": "2014-04-15T05:04:00Z",
+        "duration_min": 40,
+        "energy_kwh": 0.039,
+        "peak_w": 156.5
       },
       {
         "start": "2014-04-15T05:21:00Z",
         "end": "2014-04-15T06:40:00Z",
         "duration_min": 80,
-        "energy_kwh": 0.462,
-        "peak_w": 1716.6
+        "energy_kwh": 0.443,
+        "peak_w": 1696.9
       },
       {
-        "start": "2014-04-15T07:07:00Z",
+        "start": "2014-04-15T07:04:00Z",
         "end": "2014-04-15T07:37:00Z",
-        "duration_min": 31,
+        "duration_min": 34,
         "energy_kwh": 0.033,
-        "peak_w": 205.3
+        "peak_w": 189.6
       }
     ],
     "warnings": [

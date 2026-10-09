@@ -7,7 +7,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 # Requests are capped so a call finishes well within the platform's proxy timeout. Default: 2 days
-# of 1-minute data (~23 s on a shared CPU, ~2 s on a dedicated one); raise it with MAX_POINTS.
+# of 1-minute data (~2 s of server time on the deployed dedicated core); raise it with MAX_POINTS.
 MAX_POINTS = int(os.getenv("MAX_POINTS", 2_880))
 MAX_AGGREGATE_W = 25_000.0   # above a 100 A x 230 V domestic supply: certainly a meter error
 MAX_MISSING_FRACTION = 0.10  # same tolerance as training/evaluation windows

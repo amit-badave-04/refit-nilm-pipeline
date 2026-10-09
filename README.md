@@ -10,11 +10,27 @@ power minute by minute from the whole-home signal alone**, evaluated on homes th
 seen. The selected model ships as an **int8 ONNX ensemble behind a FastAPI service on Fly.io**.
 
 **🔗 Live API:** [refit-wm-nilm.fly.dev/docs](https://refit-wm-nilm.fly.dev/docs). Send 1-minute
-whole-home power; get washing-machine power, detected cycles and energy back. A real day from an
-unseen test home is in [`service/examples/`](service/examples/). The machine stops when idle, so the
-first request after a pause takes a few extra seconds.
+whole-home power; get washing-machine power, detected cycles and energy back. In the docs, open
+`POST /v1/disaggregate`, press **Try it out**, then **Execute**. Six real hours from an unseen test
+home, with two recorded washes, are prefilled. A full real day is in
+[`service/examples/`](service/examples/). The machine stops when idle, so the first request after a
+pause takes a few extra seconds.
 
 > Data: REFIT, CC BY 4.0 (Murray, Stankovic & Stankovic 2017). Code: MIT.
+
+### Reviewing this in 10 minutes
+
+| time | where | what to look at |
+|---|---|---|
+| 2 min | this page | [Results](#results) on unseen homes and the [model selection](#model-selection) table |
+| 2 min | [DATA.md, section 2](DATA.md#2-raw-house-1-what-i-found-notebook-01) | the raw-clock finding, and the related timestamp problem in the official cleaned release |
+| 3 min | [RESULTS.md](RESULTS.md) | "At a glance", then [section 4, failure analysis](RESULTS.md#4-failure-analysis) |
+| 2 min | [Recommendation.md](Recommendation.md) | one page for a utility: uses, limits and one measurable saving |
+| 1 min | [live API](https://refit-wm-nilm.fly.dev/docs) | run the prefilled example |
+
+Code worth opening first: [`notebooks/06_evaluation_failure_analysis_resolution.ipynb`](notebooks/06_evaluation_failure_analysis_resolution.ipynb)
+(evaluation on unseen homes), [`src/refit_nilm/cleaning.py`](src/refit_nilm/cleaning.py) (raw-data
+rules) and [`service/app/main.py`](service/app/main.py) (the API).
 
 ---
 
@@ -128,9 +144,9 @@ home (House 18), with three seeds each unless stated:
 | Models | Seq2Point CNN (Zhang et al. 2018) | The most replicated architecture on REFIT washing machines, and small enough for three seeds of every variant. |
 | Baselines | LightGBM 4.7 on window features; usage profile; always-off | They show the deep model earns its complexity. |
 | Notebooks | Jupyter, executed headless in order by papermill | Seven notebooks, each with the reason before every step and a closing summary. |
-| Serving | ONNX Runtime 1.30 (int8, per-channel), FastAPI, Pydantic 2 | A 12.6 MB model in a ~100 MB image, with metric parity to PyTorch measured on a full test home. |
-| Hosting | Fly.io Machines, London, auto-stop | Pay only while serving; health-checked; non-root container. |
-| Quality gates | pytest (50 tests); GitHub Actions: library tests, API tests, Docker build, container smoke test | Every cleaning rule, metric, split guarantee and API contract is pinned by a test. |
+| Serving | ONNX Runtime 1.30 (int8 dense layers, per-channel; fp32 convolutions), FastAPI, Pydantic 2 | A 12.9 MB model in a ~100 MB image, with metric parity to PyTorch measured on a full test home. The convolutions stay fp32 because int8 convolutions ran 4–6× slower on the server CPU. |
+| Hosting | Fly.io Machines (dedicated core), London, auto-stop | Pay only while serving; health-checked; non-root container. |
+| Quality gates | pytest (52 tests); GitHub Actions: library tests, API tests, Docker build, container smoke test | Every cleaning rule, metric, split guarantee and API contract is pinned by a test. |
 
 ## Architecture
 
@@ -307,8 +323,8 @@ flowchart LR
   Exporter metadata is stripped, and a CI test fails if build-machine paths ever ship.
 - **Privacy:** logs record path, status, latency and size only, and validation errors never echo data.
 - **Container:** a slim Python 3.12 base, a non-root user and a health check on `/health`.
-- **Parity:** on a full unseen home the int8 model scores NDE 0.740 against 0.737 for the PyTorch
-  ensemble (`artifacts/metrics/onnx_parity.json`).
+- **Parity:** on a full unseen home the quantised model scores NDE 0.737 and cycle F1 0.566, against
+  0.737 and 0.564 for the PyTorch ensemble (`artifacts/metrics/onnx_parity.json`).
 
 Usage, endpoints, latency and the real-day example: [`service/README.md`](service/README.md).
 

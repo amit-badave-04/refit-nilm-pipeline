@@ -4,8 +4,11 @@ The exported graph takes raw 1-minute aggregate windows in watts, shape (batch, 
 (washing-machine power in watts, on-probability). Standardisation, the gate and the conversion
 back to watts are inside the graph, so the service needs only onnxruntime and numpy.
 
-The graph is quantised to int8 weights (dynamic quantisation) and checked for parity with the
-PyTorch model on real windows before it is written.
+The dense layers (99 % of the weights) are quantised to int8 (dynamic quantisation); the
+convolutions stay in fp32 because onnxruntime's int8 convolution kernels are several times slower
+than fp32 on CPUs without VNNI instructions (measured 6.8-8.4 s vs 1.5-1.8 s per day of data on the
+deployment CPU, an AMD EPYC core with AVX2). The graph is checked for parity with the PyTorch model on
+real windows before it is written.
 
 Usage: python scripts/export_onnx.py --checkpoint artifacts/models/<run>.pt --name <name>
 """
@@ -30,8 +33,7 @@ from refit_nilm import datasets as D
 from refit_nilm import train as T
 
 OUT = C.PROJECT_ROOT / "service" / "model"
-
-
+QUANTISED_OPS = ["MatMul", "Gemm"]  # dense layers only; convolutions stay fp32 (see module docstring)
 
 LEAK_PATTERNS = [rb":\Users", rb":/Users", rb"/home/", rb"site-packages", rb"stack_trace"]
 
@@ -120,7 +122,8 @@ def main() -> None:
         extra.unlink()
     onnx.save(proto, str(fp32), save_as_external_data=False)
     int8 = OUT / "model.onnx"
-    quantize_dynamic(str(fp32), str(int8), weight_type=QuantType.QInt8, per_channel=True)
+    quantize_dynamic(str(fp32), str(int8), weight_type=QuantType.QInt8, per_channel=True,
+                     op_types_to_quantize=QUANTISED_OPS)
     q = strip_metadata(onnx.load(str(int8)))
     onnx.save(q, str(int8), save_as_external_data=False)
     assert_no_local_paths(int8)
@@ -169,7 +172,7 @@ def main() -> None:
         "standardisation": stats,
         "training_config": {k: v for k, v in cfg.__dict__.items() if k != "seed"},
         "seeds": [l[1].seed for l in loaded],
-        "quantisation": {"type": "dynamic int8 weights, per-channel scales", "parity_set": "4,000 random windows from House 8", "parity_vs_fp32": parity, "full_house_parity": "artifacts/metrics/onnx_parity.json"},
+        "quantisation": {"type": "dynamic int8 weights (per-channel scales) for the dense layers; convolutions in fp32", "parity_set": "4,000 random windows from House 8", "parity_vs_fp32": parity, "full_house_parity": "artifacts/metrics/onnx_parity.json"},
         "intended_use": "Portfolio-level estimates of washing-machine energy and usage timing in UK-like homes.",
         "not_for": [
             "billing or any individually binding decision",

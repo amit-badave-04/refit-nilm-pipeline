@@ -1,6 +1,7 @@
 """Washing-machine disaggregation API.
 
 POST /v1/disaggregate   1-minute whole-home power -> washing-machine power, on-agreement, cycles
+GET  /                  redirects to the interactive docs (/docs), which carry a real example
 GET  /health            liveness + model loaded
 GET  /model             model card (training data, validation/test scores, limits of use)
 
@@ -18,17 +19,29 @@ import uuid
 from collections import defaultdict, deque
 from contextlib import asynccontextmanager
 from datetime import timedelta
+from pathlib import Path
+from typing import Annotated
 
 import numpy as np
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Body, Depends, FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 
 from .inference import Engine, detect_cycles
 from .schemas import Cycle, DisaggregationRequest, DisaggregationResponse, Summary
 
 MAX_BODY_BYTES = int(os.getenv("MAX_BODY_BYTES", 2_000_000))
 RATE_LIMIT_PER_MIN = int(os.getenv("RATE_LIMIT_PER_MIN", 30))
+
+# A real request for the interactive docs: six hours of REFIT House 8 (an unseen test home) in which
+# the plug monitor recorded two washes, 03:39-04:50 and 05:19-07:39 UTC.
+EXAMPLES = {
+    "house8": {
+        "summary": "REFIT House 8, 15 Apr 2014, 02:30-08:30 UTC (two real washes)",
+        "description": "Unseen test home. The plug monitor recorded washes at 03:39-04:50 and 05:19-07:39 UTC.",
+        "value": json.loads((Path(__file__).with_name("openapi_example.json")).read_text()),
+    }
+}
 
 logger = logging.getLogger("wm-nilm")
 logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -96,6 +109,10 @@ def create_app(engine: Engine | None = None) -> FastAPI:
     def get_engine(request: Request) -> Engine:
         return request.app.state.engine
 
+    @app.get("/", include_in_schema=False)
+    def root() -> RedirectResponse:
+        return RedirectResponse("/docs")
+
     @app.get("/health")
     def health(engine: Engine = Depends(get_engine)) -> dict:
         return {"status": "ok", "model": engine.version}
@@ -105,7 +122,10 @@ def create_app(engine: Engine | None = None) -> FastAPI:
         return {**engine.card, "version": engine.version}
 
     @app.post("/v1/disaggregate", response_model=DisaggregationResponse)
-    def disaggregate(req: DisaggregationRequest, engine: Engine = Depends(get_engine)) -> DisaggregationResponse:
+    def disaggregate(
+        req: Annotated[DisaggregationRequest, Body(openapi_examples=EXAMPLES)],
+        engine: Engine = Depends(get_engine),
+    ) -> DisaggregationResponse:
         n = len(req.aggregate_w)
         if n < engine.window:
             raise HTTPException(422, f"need at least {engine.window} readings (one model window); got {n}")

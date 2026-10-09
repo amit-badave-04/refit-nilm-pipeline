@@ -37,6 +37,21 @@ def test_health_and_model_card(client):
     assert "not_for" in card
 
 
+def test_root_redirects_to_docs(client):
+    r = client.get("/", follow_redirects=False)
+    assert r.status_code == 307 and r.headers["location"] == "/docs"
+
+
+def test_docs_example_is_a_valid_request(client):
+    """The example shown in /docs must pass validation and find the recorded washes."""
+    examples = client.get("/openapi.json").json()["paths"]["/v1/disaggregate"]["post"]["requestBody"]["content"][
+        "application/json"]["examples"]
+    payload = examples["house8"]["value"]
+    r = client.post("/v1/disaggregate", json=payload)
+    assert r.status_code == 200, r.text
+    assert r.json()["summary"]["cycles"] >= 1
+
+
 def test_disaggregate_shapes_and_summary(client):
     values = _day()
     r = client.post("/v1/disaggregate", json=_req(values))
@@ -91,7 +106,7 @@ def test_model_file_carries_no_build_machine_metadata():
     from pathlib import Path
 
     data = (Path(__file__).resolve().parents[1] / "model" / "model.onnx").read_bytes()
-    for pattern in (b":\Users", b":/Users", b"/home/", b"site-packages", b"stack_trace"):
+    for pattern in (rb":\Users", b":/Users", b"/home/", b"site-packages", b"stack_trace"):
         assert pattern not in data, pattern
 
 

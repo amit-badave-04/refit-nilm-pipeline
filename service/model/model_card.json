@@ -1,8 +1,8 @@
 {
   "name": "wm-seq2point-ensemble-w81",
   "artifact": "model.onnx",
-  "sha256": "1952e3d7439f6736b851df1f4c8910ff8ece5ac65c5d68d0bbf65c4e01e56750",
-  "created_utc": "2026-10-09T01:19:19+00:00",
+  "sha256": "5e852a4c3d56447bb548a15201e21b7e897e775bfcc20d4eeb0a9ac6b9a2b9db",
+  "created_utc": "2026-10-09T11:14:20+00:00",
   "architecture": "seq2point",
   "window": 81,
   "input": "1-minute whole-home active power (W), UTC-regular, missing readings <= 10 %",
@@ -51,12 +51,12 @@
     20
   ],
   "quantisation": {
-    "type": "dynamic int8 weights, per-channel scales",
+    "type": "dynamic int8 weights (per-channel scales) for the dense layers; convolutions in fp32",
     "parity_set": "4,000 random windows from House 8",
     "parity_vs_fp32": {
-      "max_abs_diff_w": 329.2130432128906,
-      "mean_abs_diff_w": 1.5289291143417358,
-      "corr": 0.9967831058159776,
+      "max_abs_diff_w": 20.271728515625,
+      "mean_abs_diff_w": 0.2739200294017792,
+      "corr": 0.9999741959049427,
       "windows": 4000
     },
     "full_house_parity": "artifacts/metrics/onnx_parity.json"

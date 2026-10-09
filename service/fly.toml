@@ -19,6 +19,13 @@ primary_region = "lhr"
   auto_start_machines = true
   min_machines_running = 0
 
+  # Inference is CPU-bound on one core: beyond two requests in flight the proxy prefers (and starts)
+  # the second machine, and it never sends a machine more than four at once.
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 2
+    hard_limit = 4
+
   [[http_service.checks]]
     grace_period = "20s"
     interval = "30s"
@@ -26,6 +33,8 @@ primary_region = "lhr"
     path = "/health"
     timeout = "5s"
 
+# A dedicated core: a shared core's CPU share is throttled under sustained load. Billed only while
+# running (machines auto-stop when idle); performance VMs need at least 2 GB.
 [[vm]]
-  size = "shared-cpu-1x"
-  memory = "512mb"
+  size = "performance-1x"
+  memory = "2gb"
