@@ -16,7 +16,8 @@ home, with two recorded washes, are prefilled. A full real day is in
 [`service/examples/`](service/examples/). The machine stops when idle, so the first request after a
 pause takes a few extra seconds.
 
-> Data: REFIT, CC BY 4.0 (Murray, Stankovic & Stankovic 2017). Code: MIT.
+> Data: REFIT, CC BY 4.0 (Murray, Stankovic & Stankovic 2017). Code: MIT, except the Apache-2.0
+> NILMFormer module (see [Licence and data](#licence-and-data)).
 
 ### Reviewing this in 10 minutes
 
@@ -48,13 +49,13 @@ rules) and [`service/app/main.py`](service/app/main.py) (the API).
 - **Evidence-first evaluation.** The reference REFIT split plus five more unseen homes, a seen-home
   temporal test, energy-, minute- and cycle-level metrics, failure attribution to the appliances that
   caused it, and a 15/30-minute smart-meter study. A 2025 transformer is tested as a challenger
-  under a rule committed before its full training run, and bootstrap intervals show how far the headline
-  unseen-home numbers can be trusted.
+  under a rule committed before its full training run, and bootstrap intervals show how far the unseen-home
+  NDE, daily energy error and cycle F1 can be trusted.
 - **A production-style inference service.** Torch-free ONNX runtime, validated inputs, rate limits,
   structured logs, a model card and contract tests in CI, deployed on Fly.io.
 - **Reproducible.** Pinned environment, checksummed data and seeded, deterministic GPU training. A
-  fresh clone regenerated every results table of notebooks 01–06 identically, and the transformer
-  training of notebook 07 repeats bit for bit on the same GPU.
+  fresh clone regenerated the 15 results tables it compared from notebooks 01–06 identically, and
+  retraining notebook 07's transformer (seed 42) in a fresh process reproduces it bit for bit.
 
 ## Why washing machines are a hard disaggregation target
 
@@ -139,11 +140,11 @@ candidate is accepted or rejected on the validation home (House 18), with three 
 | Seq2Point, W = 237 | 0.80 (seed 42) | 0.52 (seed 42) | window 81 chosen |
 | on/off-gated Seq2Point (subtask gating) | 0.83 ± 0.03 | 0.47 ± 0.04 | not adopted |
 | Seq2Point + distractor-appliance augmentation | 0.61 ± 0.08 | 0.57 ± 0.08 | not adopted (acceptance rule fixed before training) |
-| NILMFormer transformer (KDD 2025), published recipe with three declared deviations † | 1.11 ± 0.06 | 0.07 ± 0.06 | not adopted (05b-style rule fixed before its full run) |
+| NILMFormer transformer (KDD 2025), published recipe with declared deviations † | 1.11 ± 0.06 | 0.07 ± 0.06 | not adopted (05b-style rule fixed before its full run) |
 | **Seq2Point seed ensemble** | **0.60** | **0.64** | **primary** |
 
 † On the minutes both models can score; on those minutes Seq2Point scores 0.675 ± 0.051 and
-0.603 ± 0.016 (notebook 07).
+0.603 ± 0.016. The deviations from the published recipe are listed in notebook 07's recipe table.
 
 ## Stack choice and why
 
@@ -158,7 +159,7 @@ candidate is accepted or rejected on the validation home (House 18), with three 
 | Notebooks | Jupyter, executed headless in order by papermill | Nine notebooks, each with the reason before every step and a closing summary. |
 | Serving | ONNX Runtime 1.30 (int8 dense layers, per-channel; fp32 convolutions), FastAPI, Pydantic 2 | A 12.9 MB model in a ~100 MB image, with metric parity to PyTorch measured on a full test home. The convolutions stay fp32 because int8 convolutions ran 4–6× slower on the server CPU. |
 | Hosting | Fly.io Machines (dedicated core), London, auto-stop | Pay only while serving; health-checked; non-root container. |
-| Quality gates | pytest (67 tests); GitHub Actions: library tests, API tests, Docker build, container smoke test | Every cleaning rule, metric, split guarantee and API contract is pinned by a test. |
+| Quality gates | pytest (75 tests); GitHub Actions: library tests, API tests, Docker build, container smoke test | Every cleaning rule, metric, split guarantee and API contract is pinned by a test. |
 
 ## Architecture
 
@@ -374,11 +375,12 @@ python scripts/export_onnx.py --checkpoint artifacts/models/m2_seq2point_w81_s42
 cd service && uvicorn app.main:app --port 8080
 ```
 
-**Reproducibility check:** a fresh clone run end to end with these steps regenerated every results
-table of notebooks 01–06 identically (largest difference 1.5e-5, in one LightGBM cell) and the training curves to five
-decimals (`artifacts/metrics/reproducibility_check.json`). Notebook 07's transformer training uses
-PyTorch's deterministic algorithms, and two runs of one seed give bit-identical weights
-(`artifacts/metrics/seq2seq_determinism_check.json`). Notebook 08 involves no training.
+**Reproducibility check:** a fresh clone run end to end with these steps regenerated the 15 results
+tables it compared, from notebooks 01–06, identically (largest difference 1.5e-5, in one LightGBM
+cell), and the seed-42 Seq2Point training log to five decimals
+(`artifacts/metrics/reproducibility_check.json`). Notebook 07's transformer training uses PyTorch's
+deterministic algorithms: retraining seed 42 in a fresh process reproduces the notebook's weights
+and its 11-epoch validation curve bit for bit (`artifacts/metrics/seq2seq_determinism_check.json`). Notebook 08 involves no training.
 
 ## Assumptions and preprocessing decisions
 

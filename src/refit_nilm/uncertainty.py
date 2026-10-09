@@ -33,14 +33,18 @@ def daily_stats(y: pd.Series, yhat: pd.Series, rule: CycleRule = CycleRule(), io
     tc, pc = detect_cycles(y, rule), detect_cycles(yhat.where(y.notna()), rule)
     m = match_cycles(tc, pc, iou_min)
     count = lambda starts: pd.Series(1, index=pd.DatetimeIndex(starts).floor("D")).groupby(level=0).sum()  # noqa: E731
-    out = sq[ok.groupby(day).sum() > 0].copy()  # days without a scored minute are not resampling units
-    out["y_kwh"] = energy["y_kwh"].reindex(out.index)
-    out["yhat_kwh"] = energy["yhat_kwh"].reindex(out.index)
+    n_true, n_pred = count(tc["start"]), count(pc["start"])
+    n_matched = count(tc.loc[m["true_idx"], "start"]) if len(m) else pd.Series(dtype=float)
+    # resampling units: days with a scored minute, plus any day on which a cycle starts (so that
+    # every cycle counted by metrics.cycle_scores is counted here too)
+    days = sq.index[ok.groupby(day).sum().to_numpy() > 0].union(n_true.index).union(n_pred.index)
+    out = sq.reindex(days, fill_value=0.0)
+    out["y_kwh"] = energy["y_kwh"].reindex(days)
+    out["yhat_kwh"] = energy["yhat_kwh"].reindex(days)
     out["energy_day"] = out["y_kwh"].notna()
-    out["n_true"] = count(tc["start"]).reindex(out.index).fillna(0) if len(tc) else 0
-    out["n_pred"] = count(pc["start"]).reindex(out.index).fillna(0) if len(pc) else 0
-    matched_starts = tc.loc[m["true_idx"], "start"] if len(m) else []
-    out["n_matched"] = count(matched_starts).reindex(out.index).fillna(0) if len(m) else 0
+    out["n_true"] = n_true.reindex(days, fill_value=0)
+    out["n_pred"] = n_pred.reindex(days, fill_value=0)
+    out["n_matched"] = n_matched.reindex(days, fill_value=0)
     return out[STAT_COLS]
 
 

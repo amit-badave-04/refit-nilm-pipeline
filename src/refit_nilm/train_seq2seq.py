@@ -108,14 +108,18 @@ def predict(model: torch.nn.Module, src: SeqWindowSource, starts: np.ndarray, ba
     return torch.cat(out).cpu().numpy()
 
 
+def masked_mse(pred: torch.Tensor, target: torch.Tensor, ok: torch.Tensor) -> torch.Tensor:
+    """Mean squared error over the minutes whose target is usable; 0 if none is."""
+    return (((pred - target) ** 2) * ok).sum() / ok.sum().clamp_min(1)
+
+
 def _epoch(model, opt, src: SeqWindowSource, train_starts: torch.Tensor, n_draw: int, cfg: Seq2SeqConfig, gen) -> float:
     model.train()
     pick = train_starts[torch.randint(len(train_starts), (n_draw,), device=src.device, generator=gen)]
     total, n = torch.zeros((), device=src.device), 0
     for i in range(0, n_draw, cfg.batch_size):
         xb, yb, okb = src.batch(pick[i : i + cfg.batch_size])
-        err = (model(xb)["power"] - yb) ** 2
-        loss = (err * okb).sum() / okb.sum().clamp_min(1)
+        loss = masked_mse(model(xb)["power"], yb, okb)
         opt.zero_grad(set_to_none=True)
         loss.backward()
         opt.step()
@@ -125,13 +129,17 @@ def _epoch(model, opt, src: SeqWindowSource, train_starts: torch.Tensor, n_draw:
 
 
 def fit(corpus: Corpus, cfg: Seq2SeqConfig, device: str = "cuda") -> tuple[torch.nn.Module, list[dict], float]:
-    """Train with deterministic algorithms; restore the caller's setting afterwards."""
+    """Train with deterministic algorithms, then restore the caller's setting (on/off and warn-only).
+
+    Like ``train.fit``, this seeds the global random generators and sets the cuDNN flags.
+    """
     previous = torch.are_deterministic_algorithms_enabled()
+    previous_warn_only = torch.is_deterministic_algorithms_warn_only_enabled()
     torch.use_deterministic_algorithms(True)
     try:
         return _fit(corpus, cfg, device)
     finally:
-        torch.use_deterministic_algorithms(previous)
+        torch.use_deterministic_algorithms(previous, warn_only=previous_warn_only)
 
 
 def _fit(corpus: Corpus, cfg: Seq2SeqConfig, device: str) -> tuple[torch.nn.Module, list[dict], float]:

@@ -9,11 +9,12 @@ compares, on random input:
 * evaluation-mode outputs, at the input scale the model sees in training (load / 10 kW, about
   0.05) and at scale 1;
 * training-mode outputs (dropout active, same random seed for both models);
-* the gradients of the summed training-mode output with respect to every parameter.
-Writes artifacts/metrics/nilmformer_port_check.json and fails if an output difference, or a gradient
-difference relative to the largest gradient, exceeds 1e-5.
+* the gradients of the summed training-mode output with respect to every parameter tensor.
+Writes artifacts/metrics/nilmformer_port_check.json and fails if any output difference, or any
+gradient difference relative to that parameter tensor's largest gradient, exceeds 1e-5 or is not finite.
 """
 import json
+import math
 import sys
 import tempfile
 import types
@@ -64,11 +65,11 @@ def compare(orig: torch.nn.Module, port: torch.nn.Module) -> dict:
     result["train_mode_output_differs_from_eval"] = bool((b.detach() - eval_out).abs().max() > 1e-4)
     a.sum().backward()
     b.sum().backward()
-    diff = max(float((p.grad - q.grad).abs().max()) for p, q in zip(orig.parameters(), port.parameters()))
-    scale = max(float(p.grad.abs().max()) for p in orig.parameters())
-    result["gradient_max_abs_diff"] = diff
-    result["gradient_max_abs_value"] = scale
-    result["gradient_max_rel_diff"] = diff / scale
+    pairs = list(zip(orig.parameters(), port.parameters()))
+    result["gradient_max_abs_diff"] = max(float((p.grad - q.grad).abs().max()) for p, q in pairs)
+    # relative to each tensor's own largest gradient, so small tensors are checked on their own scale
+    result["gradient_max_rel_diff_per_tensor"] = max(
+        float((p.grad - q.grad).abs().max() / p.grad.abs().max().clamp_min(1e-12)) for p, q in pairs)
     return result
 
 
@@ -91,8 +92,8 @@ def main() -> None:
             raise SystemExit("parameter order or shapes differ")
         port.load_state_dict({k: v.clone() for k, v in zip(sp, so.values())})
         diffs = compare(orig, port)
-    checked = [v for k, v in diffs.items() if k.startswith(("eval_", "train_mode_max")) or k == "gradient_max_rel_diff"]
-    passed = max(checked) <= TOLERANCE and diffs["train_mode_output_differs_from_eval"]
+    checked = [v for k, v in diffs.items() if k.startswith(("eval_", "train_mode_max")) or k == "gradient_max_rel_diff_per_tensor"]
+    passed = all(math.isfinite(v) and v <= TOLERANCE for v in checked) and diffs["train_mode_output_differs_from_eval"]
     report = {"original_commit": COMMIT, "parameter_tensors": len(so), **diffs, "tolerance": TOLERANCE, "passed": passed}
     OUT.write_text(json.dumps(report, indent=2))
     print(json.dumps(report, indent=2))

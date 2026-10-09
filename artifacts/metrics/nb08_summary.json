@@ -256,6 +256,12 @@
   "heated_detection_unseen": {
     "8": {
       "label_f1_matched": 0.818,
+      "label_f1_all_heated_baseline": 0.913,
+      "label_accuracy_matched": 0.741,
+      "label_balanced_accuracy_matched": 0.846,
+      "heated_recall_matched": 0.692,
+      "matched": 232,
+      "matched_heated": 195,
       "e2e_precision": 0.682,
       "e2e_recall": 0.529,
       "true_heated": 255,
@@ -263,6 +269,12 @@
     },
     "1": {
       "label_f1_matched": 0.917,
+      "label_f1_all_heated_baseline": 0.619,
+      "label_accuracy_matched": 0.931,
+      "label_balanced_accuracy_matched": 0.923,
+      "heated_recall_matched": 0.846,
+      "matched": 29,
+      "matched_heated": 13,
       "e2e_precision": 0.297,
       "e2e_recall": 0.268,
       "true_heated": 41,
@@ -270,6 +282,12 @@
     },
     "6": {
       "label_f1_matched": 0.975,
+      "label_f1_all_heated_baseline": 0.842,
+      "label_accuracy_matched": 0.964,
+      "label_balanced_accuracy_matched": 0.954,
+      "heated_recall_matched": 0.975,
+      "matched": 110,
+      "matched_heated": 80,
       "e2e_precision": 0.83,
       "e2e_recall": 0.876,
       "true_heated": 89,
@@ -277,6 +295,12 @@
     },
     "10": {
       "label_f1_matched": 0.791,
+      "label_f1_all_heated_baseline": 0.937,
+      "label_accuracy_matched": 0.687,
+      "label_balanced_accuracy_matched": 0.73,
+      "heated_recall_matched": 0.673,
+      "matched": 399,
+      "matched_heated": 352,
       "e2e_precision": 0.736,
       "e2e_recall": 0.504,
       "true_heated": 470,
@@ -284,6 +308,12 @@
     },
     "19": {
       "label_f1_matched": 0.0,
+      "label_f1_all_heated_baseline": 0.0,
+      "label_accuracy_matched": 0.994,
+      "label_balanced_accuracy_matched": 0.994,
+      "heated_recall_matched": NaN,
+      "matched": 170,
+      "matched_heated": 0,
       "e2e_precision": 0.0,
       "e2e_recall": NaN,
       "true_heated": 0,
@@ -291,6 +321,12 @@
     },
     "20": {
       "label_f1_matched": 0.847,
+      "label_f1_all_heated_baseline": 0.889,
+      "label_accuracy_matched": 0.775,
+      "label_balanced_accuracy_matched": 0.766,
+      "heated_recall_matched": 0.781,
+      "matched": 40,
+      "matched_heated": 32,
       "e2e_precision": 0.641,
       "e2e_recall": 0.189,
       "true_heated": 132,
@@ -357,6 +393,15 @@
     "months": 14,
     "ape_median_pct": 19.8,
     "ape_max_pct": 33.5,
-    "r_true_vs_pred": 0.886
+    "r_true_vs_pred": 0.886,
+    "pred_over_true_total": 0.799,
+    "months_under_predicted": 13
+  },
+  "monthly_change": {
+    "pairs": 13,
+    "mae_pp": 11.2,
+    "same_direction": 12,
+    "median_abs_true_change_pct": 20.3,
+    "median_abs_pred_change_pct": 15.7
   }
 }

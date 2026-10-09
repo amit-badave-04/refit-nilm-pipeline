@@ -137,6 +137,8 @@ def fit(corpus: Corpus, stats: dict, cfg: TrainConfig, device: str = "cuda", log
             total += loss.detach() * len(xb)
             n += len(xb)
         total = float(total)
+        if not np.isfinite(total):
+            raise RuntimeError(f"training loss became {total} at epoch {epoch}")
         pred = predict(model, src, val_starts, stats)["power"]
         val_nde = nde_np(y_val, pred)
         val_mae = float(np.mean(np.abs(pred - y_val)))
@@ -150,6 +152,8 @@ def fit(corpus: Corpus, stats: dict, cfg: TrainConfig, device: str = "cuda", log
             bad += 1
             if epoch >= cfg.min_epochs and bad >= cfg.patience:
                 break
+    if best_state is None:
+        raise RuntimeError("validation NDE never improved (non-finite predictions?); there is no checkpoint to restore")
     model.load_state_dict(best_state)
     return model, history
 
