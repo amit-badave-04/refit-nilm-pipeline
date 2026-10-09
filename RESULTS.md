@@ -181,7 +181,8 @@ found with openly licensed code and 1-minute REFIT washing-machine results in it
   within 4 × 10⁻⁶ of its own largest value [`nilmformer_port_check.json`].
 * **The recipe.** Its published recipe, on the same homes, masks and metrics, with these declared
   deviations: a 129-minute window, a loss masked on unusable minutes, windows kept with up to 10 % missing
-  input, epochs drawn as random windows instead of one tiling, and centred-window inference. Training is deterministic: retraining seed 42 in a fresh process
+  input, epochs drawn as random windows instead of one tiling, early stopping and the learning-rate
+  schedule driven by validation NDE instead of validation loss, and centred-window inference. Training is deterministic: retraining seed 42 in a fresh process
   reproduces the notebook's weights bit for bit [`seq2seq_determinism_check.json`].
 * **The rule.** The same form as the augmented model's rule in notebook 05b: NILMFormer replaces
   Seq2Point only if it wins on both validation NDE and cycle F1 by more than the seed spread. The
@@ -363,12 +364,16 @@ what a targeting campaign needs.
   use.
 * Monthly washing energy has a median error of 19–51 % per home, with single months off by more
   than 300 %. Summed over the homes available each month (at least four; 14 months), the median
-  error is 20 % and the largest 34 % (r = 0.89 between true and predicted totals). The pooled
-  level is still biased: 20 % low overall, and low in 13 of the 14 months.
-* Month-to-month changes over the same homes go the right way in 12 of 13 consecutive pairs, but
-  the model damps them: median 16 % predicted against 20 % true, a mean error of 11 percentage
-  points [`nb08_monthly_change.csv`]. A portfolio can track the direction of monthly change; its
-  level runs low. I did not test other mixes of homes.
+  error is 20 % and the largest 34 % (r = 0.89 between true and predicted totals). Single
+  home-months over the same period have a median error of 32 %, so errors partly cancel.
+* The pooled level is biased: 20 % low overall, and low in 13 of the 14 months. That depends on
+  the mix of homes. Per home, predicted energy ranges from 0.66× to 1.49× the truth: three over,
+  three under.
+* Month-to-month changes over the same homes go the right way in 12 of 13 consecutive pairs, with
+  a mean error of 11 percentage points, but the model damps them: a predicted change is about
+  0.55–0.6 of the true one [`nb08_monthly_change.csv`]. The one miss is the largest true change
+  (Feb to Mar 2015: +52 % true, −6 % predicted). A portfolio can track the direction of most
+  monthly changes but under-states their size by about half. I did not test other mixes of homes.
 
 ## 5. Missing labels, appliance changes and unmetered loads
 

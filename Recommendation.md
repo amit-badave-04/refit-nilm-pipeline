@@ -17,8 +17,9 @@ home's total 1-minute consumption. Tested on six homes it had never seen:
 **Suitable uses.** Portfolio-level insight: typical wash timing and frequency across many homes,
 ranking households by how often they run hot washes for targeted advice, and the direction of
 month-to-month change for groups of homes. In the six test homes, monthly changes went the right
-way 12 times in 13, but the model damped them (median 16 % against 20 % true), and its level ran
-about 20 % low. So a before/after comparison would likely understate an effect. Peak-hour shares only after correcting them against a
+way 12 times in 13, but the predicted changes were only about 0.55–0.6 of the true ones, and the
+one miss was the largest change. A before/after comparison from the model alone would therefore
+understate an effect by about half, which is one more reason for the calibration panel below. Peak-hour shares only after correcting them against a
 plug-metered panel, because the model puts too much washing energy into the evening peak.
 
 **Not suitable for.** Individual bills or any binding per-home claim; per-wash energy figures;

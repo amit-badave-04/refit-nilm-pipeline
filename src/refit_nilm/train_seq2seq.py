@@ -11,7 +11,8 @@ Differences from ``train.py`` that follow the model's published recipe (Petralia
   (patience 10), at most 50 epochs.
 Inference (a declared deviation from the original's non-overlapping tiling): every target minute
 is predicted by the window centred on it, so each minute gets symmetric context, exactly as
-Seq2Point is evaluated. Early stopping uses validation NDE, the criterion used for Seq2Point.
+Seq2Point is evaluated. Early stopping and the learning-rate schedule both watch validation NDE, the
+criterion used for Seq2Point (the original code watches the validation MSE loss).
 Training runs with PyTorch's deterministic algorithms, so a run repeats bit for bit on the same
 GPU (without them, the attention kernels drift by ~1e-6 within 60 steps).
 """

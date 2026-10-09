@@ -395,13 +395,30 @@
     "ape_max_pct": 33.5,
     "r_true_vs_pred": 0.886,
     "pred_over_true_total": 0.799,
-    "months_under_predicted": 13
+    "months_under_predicted": 13,
+    "home_month_ape_median_pct_same_months": 31.7,
+    "pred_over_true_by_home": {
+      "1": 1.17,
+      "6": 1.25,
+      "8": 0.72,
+      "10": 0.66,
+      "19": 1.49,
+      "20": 0.73
+    }
   },
   "monthly_change": {
     "pairs": 13,
     "mae_pp": 11.2,
     "same_direction": 12,
     "median_abs_true_change_pct": 20.3,
-    "median_abs_pred_change_pct": 15.7
+    "median_abs_pred_change_pct": 15.7,
+    "median_paired_ratio_pred_to_true": 0.55,
+    "ratio_of_summed_abs_changes": 0.6,
+    "largest_true_change": {
+      "from": "2015-02",
+      "to": "2015-03",
+      "true_pct": 51.7,
+      "pred_pct": -6.4
+    }
   }
 }

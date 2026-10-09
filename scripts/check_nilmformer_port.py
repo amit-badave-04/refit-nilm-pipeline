@@ -66,10 +66,11 @@ def compare(orig: torch.nn.Module, port: torch.nn.Module) -> dict:
     a.sum().backward()
     b.sum().backward()
     pairs = list(zip(orig.parameters(), port.parameters()))
-    result["gradient_max_abs_diff"] = max(float((p.grad - q.grad).abs().max()) for p, q in pairs)
+    # torch.stack(...).max() propagates NaN, unlike Python's max over a generator
+    result["gradient_max_abs_diff"] = float(torch.stack([(p.grad - q.grad).abs().max() for p, q in pairs]).max())
     # relative to each tensor's own largest gradient, so small tensors are checked on their own scale
-    result["gradient_max_rel_diff_per_tensor"] = max(
-        float((p.grad - q.grad).abs().max() / p.grad.abs().max().clamp_min(1e-12)) for p, q in pairs)
+    result["gradient_max_rel_diff_per_tensor"] = float(torch.stack(
+        [(p.grad - q.grad).abs().max() / p.grad.abs().max().clamp_min(1e-12) for p, q in pairs]).max())
     return result
 
 

@@ -34,8 +34,8 @@ REFIT data unless stated, so they are context, not a leaderboard for my 1-minute
    table is cited as outside context.
    *Tested:* the model itself, ported from the authors' Apache-2.0 code (EDF), as a challenger in
    notebook 07. I used the published recipe with declared deviations (129-minute window, masked
-   loss, windows kept with up to 10 % missing input, random-window epochs, centred-window
-   inference). It did not transfer to new homes in this split.
+   loss, windows kept with up to 10 % missing input, random-window epochs, early stopping and
+   learning-rate schedule on validation NDE, centred-window inference). It did not transfer to new homes in this split.
    Validation NDE was 1.11 against 0.68 for Seq2Point, so it was not adopted.
 6. **Shin, C., Joo, S., Yim, J., Lee, H., Moon, T., Rhee, W. (2019).** Subtask gated networks for
    non-intrusive load monitoring. *AAAI-33*. arXiv:1811.06692.
