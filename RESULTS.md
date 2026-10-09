@@ -16,17 +16,18 @@ brackets). Data preparation and cleaning decisions are in [`DATA.md`](DATA.md).
   energy within real cycles (the long low-power tail); large differences between homes (NDE 0.42 to
   1.40).
 * **How certain.** Within a home the numbers are tight: House 8 NDE has a 95 % interval of
-  0.72–0.76. Between homes they are not: the six-home mean NDE of 0.83 has an interval of 0.61–1.09.
+  0.72–0.76. Between homes they are not. The average NDE over homes like these has an interval of
+  0.61–1.09, and a single home can land far outside it: the six range from 0.42 to 1.40.
   For a targeting campaign, the model ranks homes by hot-wash frequency well (ρ = 0.94 on six
   unseen homes, 0.88 on 13 held-out periods; few homes, so indicative), but it overstates the share
   of washing in the evening peak.
 * **Two negative results, reported as such:** gating the output by an on/off classifier made things
   worse; training with distractor appliances helped energy-weighted error but failed the
   acceptance rule fixed before training, on cycle detection.
-* **A 2025 transformer did not beat it.** NILMFormer (KDD 2025), tested under the same acceptance
-  rule as every other variant, was worse than predicting zero on the validation home (NDE 1.11 vs 0.68). It
-  found far fewer washes on the unseen homes (cycle F1 0.11 vs 0.48) and costs 16× the CPU. A
-  larger training budget fitted the training homes better but did not transfer.
+* **A 2025 transformer did not beat it.** I tested NILMFormer (KDD 2025) under a rule committed
+  before its full training run. It was worse than predicting zero on the validation home (NDE 1.11
+  vs 0.68), and it found far fewer washes on the unseen homes (cycle F1 0.11 vs 0.48). An 8× larger
+  training budget lowered its training loss but not its validation error.
 * **15/30-minute meters.** A model that only sees 15- or 30-minute data loses its skill (worse than
   predicting zero per interval); 1-minute input is what makes washing-machine disaggregation work.
 * **A data finding that matters for anyone using REFIT:** the official `Issues` flag removes 5–47 % of
@@ -113,7 +114,7 @@ minutes (House 1) to 130 minutes (House 6). Estimated annual washing energy rang
 | train | 2, 5, 7, 9, 15, 16, 17 — first ~80 % of each record | fitting |
 | seen-home test | same homes, last ~20 %, after a 1-day + 1-window embargo (strictly a purge gap: scikit-learn's `gap`, López de Prado's purging) | how much skill is home-specific |
 | validation | 18 | early stopping, window, loss weight, augmentation rate, choice of primary model |
-| unseen test | **8** (reference REFIT test home) + 1, 6, 10, 19, 20 | scored once, at the end |
+| unseen test | **8** (reference REFIT test home) + 1, 6, 10, 19, 20 | scored at the end of model selection (notebook 06); notebooks 07–08 re-score them only to report a challenger and put intervals on the chosen model, and change no choice |
 
 This is the house split used for REFIT washing machines since D'Incecco et al. (2020); the five
 extra homes are every remaining home with one washing machine, no PV and no documented machine
@@ -160,7 +161,8 @@ since NILM has no standard one), and the share of true energy **recovered** vs f
 * **Augmentation (M4) failed the rule fixed before training.** It had to beat M2 by more than M2's seed
   spread on both NDE (it did: −0.061) and cycle F1 (it did not: −0.034). It recovers more true
   energy but adds much more false energy; the washing-machine insertions likely raised its learned
-  on-rate.
+  on-rate. Under stricter cycle-matching definitions M4 would have led on cycle F1 (notebook 08),
+  so this was a closer call than it looks.
 * **Primary model: the M2 seed ensemble**, fixed before the test homes were scored.
 * **Single-seed choices.** The window (81 vs 237) and the M4 setting ("distractors + WM" vs
   "distractors only", a 0.001 NDE tie) were each chosen on seed 42 alone; the seed spread shows such
@@ -170,30 +172,44 @@ since NILM has no standard one), and the share of true energy **recovered** vs f
 
 Seq2Point dates from 2018, so I tested it against NILMFormer (Petralia et al., KDD 2025). NILMFormer
 is a transformer built for non-stationary household load. It standardises every window, feeds the
-window's level back as a separate token, and adds calendar inputs. It is the only transformer with
-public code and published 1-minute REFIT washing-machine results.
-* **The port.** I ported its Apache-2.0 code into one module. A script checks it against the
-  original repository: identical weights give outputs equal to within 10⁻⁸.
-* **The recipe.** I trained it with its published recipe on the same homes, masks and metrics.
-* **The rule.** The same acceptance rule as for every earlier variant: NILMFormer replaces
-  Seq2Point only if it wins on both validation NDE and cycle F1 by more than the larger seed spread.
-  I committed it before the full training run. Only a 2-epoch timing check and a 1-epoch
-  end-to-end check of the code ran before that.
+window's level back as a separate token, and adds calendar inputs. It is the only transformer I
+found with openly licensed code and 1-minute REFIT washing-machine results in its own paper.
+* **The port.** I ported its Apache-2.0 code into one module and checked it against the original
+  repository. With identical weights, outputs agree to within 10⁻⁷ and gradients to within 10⁻⁷ of
+  the largest gradient [`nilmformer_port_check.json`].
+* **The recipe.** Its published recipe, on the same homes, masks and metrics, with three declared
+  deviations: a 129-minute window, a loss masked on unusable minutes, and centred-window inference.
+  Training runs deterministically and repeats bit for bit [`seq2seq_determinism_check.json`].
+* **The rule.** The same form as the augmented model's rule in notebook 05b: NILMFormer replaces
+  Seq2Point only if it wins on both validation NDE and cycle F1 by more than the seed spread. The
+  margin here is stricter (the larger of the two models' spreads), and 05b's margin gives the same
+  decision. I committed the rule before the full training run; only a 2-epoch timing check and a
+  1-epoch end-to-end check of the code ran before that.
 
 [`nb07_validation_per_seed.csv`, `nb07_unseen_ensembles.csv`, `nb07_summary.json`]
 
-| on the minutes both models score | validation NDE | validation cycle F1 | six unseen homes: NDE / cycle F1 (ensembles) | CPU per day of data, one model |
-|---|---|---|---|---|
-| Seq2Point (3 seeds) | **0.675 ± 0.051** | **0.603 ± 0.016** | **0.83 / 0.48** | **0.18 s** |
-| NILMFormer, published recipe (3 seeds) | 1.108 ± 0.055 | 0.067 ± 0.055 | 0.92 / 0.11 | 2.85 s |
-| NILMFormer, 8× training windows per epoch (seed 42, exploratory) | 1.151 | 0.131 | not scored | |
+| on the minutes both models score | validation NDE | validation cycle F1 | six unseen homes: NDE / cycle F1 (ensembles) |
+|---|---|---|---|
+| Seq2Point (3 seeds) | **0.675 ± 0.051** | **0.603 ± 0.016** | **0.83 / 0.48** |
+| NILMFormer, centred-window inference (3 seeds) | 1.108 ± 0.055 | 0.067 ± 0.055 | 0.92 / 0.11 |
+| NILMFormer, published tiled inference (3 seeds) | 1.138 ± 0.014 | 0.074 ± 0.046 | not scored |
+| NILMFormer, 8× training windows per epoch (seed 42, exploratory) | 1.151 | 0.132 | not scored |
 
 **Seq2Point stays.** NILMFormer is worse than predicting zero on the validation home and finds far
-fewer washes on every unseen home. The failure has two layers:
-* **Under-training.** The published budget gives it a tenth of Seq2Point's optimiser steps, and its
-  NDE on its own training homes is 0.83, against 0.26 for Seq2Point.
-* **No transfer.** With 8× the windows per epoch it fits the training homes much better, yet
-  validation never improves past 1.15. It learns the training homes and transfers poorly.
+fewer washes on every unseen home. Seq2Point leads under all 14 cycle definitions, and the
+published tiled inference does no better than my centred windows [`nb07_cycle_definition_ranking_val.csv`, `nb07_inference_mode_val.csv`]. As far as the
+measurements go, the failure has two layers:
+* **Under-training.** The published budget gives it about a tenth of Seq2Point's optimiser steps
+  (5,016–7,752 against 45,120–112,800), and its NDE on its own training homes is 0.83, against 0.26
+  for Seq2Point.
+* **More budget does not reach the new home.** With 8× the windows per epoch, the training loss
+  keeps falling (0.00017 to 0.00007 over 12 epochs), but validation NDE never gets below 1.15.
+  The kept, early-stopped weights fit the training homes only slightly better than before
+  (NDE 0.78 vs 0.83). I did not score the later weights on the training homes.
+
+**Cost is not the reason.** On one CPU thread, one model costs 0.28 s per day of data for
+Seq2Point and 3.89 s for NILMFormer with centred windows, about 14×. With its published tiling
+NILMFormer costs 0.02 s, cheaper than Seq2Point [`nb07_summary.json`].
 
 My untested hypothesis: per-window normalisation throws away the absolute power level, one of the
 few cues that separate the washing machine's 2 kW heater from other 2 kW loads in a new home. This
@@ -249,28 +265,39 @@ washing energy predicted vs actual: r = 0.74 (primary model), 0.84 (augmented en
 ### How certain these numbers are (notebook 08)
 
 Seed spread says how much the model varies. Resampling says how much the numbers would move with
-different days or homes. Within each home, whole days are resampled 1,000 times; resampling runs of
-about a week instead barely changes the intervals. For the six-home mean, whole homes are
-resampled (a cluster bootstrap) [`nb08_ci_unseen.csv`]:
+different days or homes. Within each home, whole days are resampled 1,000 times. Resampling week-long runs instead
+widens the intervals by a median of 7 % (at most 47 %, House 1's daily energy error), so one-day
+blocks capture most of the dependence but not all of it. For the six-home average, whole homes
+are resampled (a cluster bootstrap) [`nb08_ci_unseen.csv`, `nb08_summary.json`]:
 
 | primary model, 95 % interval | NDE | daily energy error (Wh/day) | cycle F1 |
 |---|---|---|---|
 | House 8 | 0.737 (0.716–0.757) | 335 (301–367) | 0.564 (0.521–0.604) |
-| mean of the six unseen homes | 0.825 (0.607–1.087) | 181 (88–281) | 0.483 (0.324–0.642) |
+| average of the six unseen homes | 0.825 (0.607–1.087) | 181 (88–281) | 0.483 (0.324–0.642) |
 
 ![intervals per home](artifacts/figures/nb08_ci_forest.png)
 
-A year and more of data pins down each home's numbers tightly; the uncertainty is *between* homes.
-The six-home interval reaches past NDE 1.0 because a resample can draw House 19 several times. With
-six homes it is a rough guide (few-cluster intervals are unreliable), but its message is clear:
-the benefit in the next home is uncertain by about ±0.2–0.25 NDE, and more test homes, not more
-seeds, would narrow it.
+A year and more of data pins down each home's NDE and daily error tightly. Cycle F1 is looser where
+washes are few (House 1: 0.12–0.23). The uncertainty is *between* homes. The six-home interval is
+for the average over homes like these, and it reaches past NDE 1.0 because a resample can draw
+House 19 several times. With six homes it is a rough guide, since few-cluster intervals are
+unreliable. A single new home varies far more than the average: the six range from NDE 0.42 to
+1.40 (SD 0.32), and one is worse than predicting zero. More test homes would narrow the interval
+for the average, not that spread.
 
 **The cycle metric's own definition** [`nb08_cycle_metric_sensitivity.csv`]: mean cycle F1 over the
 six homes is 0.55 at IoU ≥ 0.1, 0.48 at the standard 0.5 and 0.23 at 0.9. Matched by start time
-instead, it is 0.38 within ±10 minutes and 0.52 within ±30. The model finds washes but places their
-ends loosely, which strict overlap penalises. Model comparisons all use one definition, so they are
-unaffected.
+instead, it is 0.38 within ±10 minutes and 0.52 within ±30. Matched washes are usually placed within
+a few minutes at both ends; House 10's starts (median 13 minutes off) and House 20's ends (12) are
+the exceptions [`nb08_matched_edge_errors.csv`].
+
+**Would another definition have changed a decision?** On the validation home, Seq2Point has the
+best cycle F1 under 10 of the 14 definitions, including the standard one. The augmented model (M4)
+is ahead under the four strictest: IoU ≥ 0.7, and starts within ±5 minutes
+[`nb08_variant_ranking_by_definition_val.csv`]. So the cycle-F1 half of M4's rejection depends on
+the matching convention. I keep the decision, because the convention was fixed before it was made,
+but it was a closer call than one definition shows. Against NILMFormer, Seq2Point leads under
+every definition (notebook 07).
 
 ## 4. Failure analysis
 
@@ -326,7 +353,9 @@ what a targeting campaign needs.
   worst in Houses 19 and 1. Its peak-hour shares need correcting against plug-metered homes before
   use.
 * Monthly washing energy has a median error of 19–51 % per home, with single months off by more
-  than 300 %. Monthly figures are a portfolio product, not a per-home one.
+  than 300 %. Summed over the homes available each month (at least four; 14 months), the median
+  error falls to 20 % and the largest to 34 % (r = 0.89 between true and predicted totals). The
+  errors partly cancel, so monthly figures are a portfolio product, not a per-home one.
 
 ## 5. Missing labels, appliance changes and unmetered loads
 

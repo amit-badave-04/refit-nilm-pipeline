@@ -1,0 +1,18 @@
+{
+  "device": "NVIDIA GeForce RTX 5090 Laptop GPU",
+  "torch": "2.14.1+cu130",
+  "epochs": 2,
+  "seed": 42,
+  "identical_weights": true,
+  "max_abs_weight_diff": 0.0,
+  "val_nde_by_epoch": [
+    [
+      1.1399362087249756,
+      1.2946900129318237
+    ],
+    [
+      1.1399362087249756,
+      1.2946900129318237
+    ]
+  ]
+}

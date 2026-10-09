@@ -30,9 +30,11 @@ REFIT data unless stated, so they are context, not a leaderboard for my 1-minute
 5. **Petralia, A., Charpentier, P., Kadhi, Y., Palpanas, T. (2025).** NILMFormer: non-intrusive
    load monitoring that accounts for non-stationarity. *KDD 2025*. arXiv:2506.05880.
    *Adopted:* the 1-minute REFIT preprocessing (mean resampling, forward-fill ≤ 3 minutes, clipping,
-   dropping windows with remaining gaps). Its 1-minute washer table is cited as outside context.
-   *Tested:* the model itself, ported from the authors' Apache-2.0 code (EDF) with the published
-   recipe, as a challenger in notebook 07. It did not transfer to new homes in this split.
+   dropping windows with more than 10 % gaps, where the paper drops any gap). Its 1-minute washer
+   table is cited as outside context.
+   *Tested:* the model itself, ported from the authors' Apache-2.0 code (EDF), as a challenger in
+   notebook 07. I used the published recipe with three declared deviations (129-minute window,
+   masked loss, centred-window inference). It did not transfer to new homes in this split.
    Validation NDE was 1.11 against 0.68 for Seq2Point, so it was not adopted.
 6. **Shin, C., Joo, S., Yim, J., Lee, H., Moon, T., Rhee, W. (2019).** Subtask gated networks for
    non-intrusive load monitoring. *AAAI-33*. arXiv:1811.06692.
@@ -107,6 +109,11 @@ REFIT data unless stated, so they are context, not a leaderboard for my 1-minute
     inference with clustered errors. *Review of Economics and Statistics* 90(3):414–427.
     *Used for:* the caveat that intervals from few clusters (six homes here) are unreliable.
 
+30. **López de Prado, M. (2018).** *Advances in Financial Machine Learning.* Wiley,
+    ISBN 978-1-119-48208-6, chapter 7 (purged cross-validation and embargo).
+    *Used for:* naming the gap between training data and the seen-home test segment correctly
+    (a purge gap).
+
 ## Resolution, savings and transfer
 
 17. **Petralia, A., Charpentier, P., Boniol, P., Palpanas, T. (2023).** Appliance detection using
@@ -143,6 +150,7 @@ REFIT data unless stated, so they are context, not a leaderboard for my 1-minute
   stated sampling rate inconsistent with REFIT.
 * **DiffNILM** (*Sensors* 2023) and LLM-prompting NILM (arXiv 2025): weaker or unreported on REFIT
   washing machines at the time of writing.
-* **Other transformers** (BERT4NILM, Energformer): NILMFormer (item 5) was the one
-  tested, as the only transformer with public code and published 1-minute REFIT washing-machine
-  results. BERT4NILM's code carries no licence.
+* **Other transformers** (BERT4NILM, Energformer): NILMFormer (item 5) was the one tested, as the
+  only transformer I found with openly licensed code and 1-minute REFIT washing-machine results in
+  its own paper. BERT4NILM's code is public but has no licence. Energformer's REFIT results come from
+  the NILMFormer authors' re-implementation.

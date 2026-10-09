@@ -12,17 +12,24 @@ Differences from ``train.py`` that follow the model's published recipe (Petralia
 Inference (a declared deviation from the original's non-overlapping tiling): every target minute
 is predicted by the window centred on it, so each minute gets symmetric context, exactly as
 Seq2Point is evaluated. Early stopping uses validation NDE, the criterion used for Seq2Point.
+Training runs with PyTorch's deterministic algorithms, so a run repeats bit for bit on the same
+GPU (without them, the attention kernels drift by ~1e-6 within 60 steps).
 """
 from __future__ import annotations
 
 import json
+import os
 import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-import numpy as np
-import pandas as pd
-import torch
+# cuBLAS needs a fixed workspace for deterministic GEMMs; it is read when the first CUDA handle is
+# created, so it must be set before any GPU work in the process.
+os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
+
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+import torch  # noqa: E402
 
 from . import config as C
 from .datasets import Corpus
@@ -118,6 +125,16 @@ def _epoch(model, opt, src: SeqWindowSource, train_starts: torch.Tensor, n_draw:
 
 
 def fit(corpus: Corpus, cfg: Seq2SeqConfig, device: str = "cuda") -> tuple[torch.nn.Module, list[dict], float]:
+    """Train with deterministic algorithms; restore the caller's setting afterwards."""
+    previous = torch.are_deterministic_algorithms_enabled()
+    torch.use_deterministic_algorithms(True)
+    try:
+        return _fit(corpus, cfg, device)
+    finally:
+        torch.use_deterministic_algorithms(previous)
+
+
+def _fit(corpus: Corpus, cfg: Seq2SeqConfig, device: str) -> tuple[torch.nn.Module, list[dict], float]:
     set_seed(cfg.seed)
     scale = training_scale(corpus)
     src = SeqWindowSource(corpus, scale, device)
@@ -134,6 +151,8 @@ def fit(corpus: Corpus, cfg: Seq2SeqConfig, device: str = "cuda") -> tuple[torch
     for epoch in range(1, cfg.max_epochs + 1):
         t0 = time.time()
         train_loss = _epoch(model, opt, src, train_starts, n_draw, cfg, gen)
+        if not np.isfinite(train_loss):
+            raise RuntimeError(f"training loss became {train_loss} at epoch {epoch}")
         pred = predict(model, src, val_starts)
         val_nde = nde_np(y_val, pred)
         sched.step(val_nde)
@@ -148,6 +167,8 @@ def fit(corpus: Corpus, cfg: Seq2SeqConfig, device: str = "cuda") -> tuple[torch
             bad += 1
             if bad >= cfg.patience:
                 break
+    if best_state is None:
+        raise RuntimeError("validation NDE never improved (non-finite predictions?); there is no checkpoint to restore")
     model.load_state_dict(best_state)
     return model, history, scale
 

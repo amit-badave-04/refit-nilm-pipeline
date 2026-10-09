@@ -48,12 +48,13 @@ rules) and [`service/app/main.py`](service/app/main.py) (the API).
 - **Evidence-first evaluation.** The reference REFIT split plus five more unseen homes, a seen-home
   temporal test, energy-, minute- and cycle-level metrics, failure attribution to the appliances that
   caused it, and a 15/30-minute smart-meter study. A 2025 transformer is tested as a challenger
-  under the same acceptance rule as every variant, and bootstrap intervals show how far each number can be
-  trusted.
+  under a rule committed before its full training run, and bootstrap intervals show how far the headline
+  unseen-home numbers can be trusted.
 - **A production-style inference service.** Torch-free ONNX runtime, validated inputs, rate limits,
   structured logs, a model card and contract tests in CI, deployed on Fly.io.
-- **Reproducible to the byte.** Pinned environment, checksummed data and seeded GPU training; a fresh
-  clone regenerates every results table identically.
+- **Reproducible.** Pinned environment, checksummed data and seeded, deterministic GPU training. A
+  fresh clone regenerated every results table of notebooks 01–06 identically, and the transformer
+  training of notebook 07 repeats bit for bit on the same GPU.
 
 ## Why washing machines are a hard disaggregation target
 
@@ -96,8 +97,9 @@ On later data from the training homes (the seen-home test) the same model reache
 F1 0.61. Full tables, per-home scores and the failure analysis are in [`RESULTS.md`](RESULTS.md).
 
 **How certain (notebook 08).** 95 % intervals from resampling whole days: House 8 NDE 0.72–0.76,
-cycle F1 0.52–0.60. Across the six homes, resampling whole homes gives a mean NDE interval of
-0.61–1.09. The real uncertainty is the next home, not the next month.
+cycle F1 0.52–0.60. For the average over homes like these, resampling whole homes gives NDE
+0.61–1.09, and a single new home varies far more: the six range from 0.42 to 1.40. The real
+uncertainty is the next home, not the next month.
 
 ![House 8: actual vs predicted washing-machine power](artifacts/figures/nb06_actual_vs_predicted_days.png)
 
@@ -137,7 +139,7 @@ candidate is accepted or rejected on the validation home (House 18), with three 
 | Seq2Point, W = 237 | 0.80 (seed 42) | 0.52 (seed 42) | window 81 chosen |
 | on/off-gated Seq2Point (subtask gating) | 0.83 ± 0.03 | 0.47 ± 0.04 | not adopted |
 | Seq2Point + distractor-appliance augmentation | 0.61 ± 0.08 | 0.57 ± 0.08 | not adopted (acceptance rule fixed before training) |
-| NILMFormer transformer (KDD 2025), published recipe † | 1.11 ± 0.06 | 0.07 ± 0.06 | not adopted (same acceptance rule; 16× the CPU cost) |
+| NILMFormer transformer (KDD 2025), published recipe with three declared deviations † | 1.11 ± 0.06 | 0.07 ± 0.06 | not adopted (05b-style rule fixed before its full run) |
 | **Seq2Point seed ensemble** | **0.60** | **0.64** | **primary** |
 
 † On the minutes both models can score; on those minutes Seq2Point scores 0.675 ± 0.051 and
@@ -156,7 +158,7 @@ candidate is accepted or rejected on the validation home (House 18), with three 
 | Notebooks | Jupyter, executed headless in order by papermill | Nine notebooks, each with the reason before every step and a closing summary. |
 | Serving | ONNX Runtime 1.30 (int8 dense layers, per-channel; fp32 convolutions), FastAPI, Pydantic 2 | A 12.9 MB model in a ~100 MB image, with metric parity to PyTorch measured on a full test home. The convolutions stay fp32 because int8 convolutions ran 4–6× slower on the server CPU. |
 | Hosting | Fly.io Machines (dedicated core), London, auto-stop | Pay only while serving; health-checked; non-root container. |
-| Quality gates | pytest (60 tests); GitHub Actions: library tests, API tests, Docker build, container smoke test | Every cleaning rule, metric, split guarantee and API contract is pinned by a test. |
+| Quality gates | pytest (67 tests); GitHub Actions: library tests, API tests, Docker build, container smoke test | Every cleaning rule, metric, split guarantee and API contract is pinned by a test. |
 
 ## Architecture
 
@@ -233,7 +235,7 @@ flowchart LR
         S["Seen-home test<br/>last ~20 %, after a<br/>1-day + 1-window embargo"]
     end
     V["Validation home 18<br/>early stopping, window,<br/>loss weight, model choice"]
-    subgraph Unseen["Unseen test homes, scored once"]
+    subgraph Unseen["Unseen test homes, scored after model selection"]
         H8["House 8<br/>reference REFIT test home"]
         X["Houses 1, 6, 10, 19, 20"]
     end
@@ -374,9 +376,9 @@ cd service && uvicorn app.main:app --port 8080
 
 **Reproducibility check:** a fresh clone run end to end with these steps regenerated every results
 table of notebooks 01–06 identically (largest difference 1.5e-5, in one LightGBM cell) and the training curves to five
-decimals (`artifacts/metrics/reproducibility_check.json`). Notebook 07's transformer training
-repeats to about two decimals in validation NDE rather than bit for bit, most likely because GPU
-attention kernels are not deterministic. Notebook 08 involves no training.
+decimals (`artifacts/metrics/reproducibility_check.json`). Notebook 07's transformer training uses
+PyTorch's deterministic algorithms, and two runs of one seed give bit-identical weights
+(`artifacts/metrics/seq2seq_determinism_check.json`). Notebook 08 involves no training.
 
 ## Assumptions and preprocessing decisions
 
@@ -393,8 +395,9 @@ attention kernels are not deterministic. Notebook 08 involves no training.
 ## Design trade-offs
 
 - **Seq2Point over a Transformer, now tested.** NILMFormer (KDD 2025) lost on validation by a wide
-  margin under the same acceptance rule as every other variant. It costs 16× the CPU per prediction. Seq2Point is
-  proven on this dataset and fast enough to train three seeds of every variant.
+  margin, under a rule fixed before its full training run; cost was not the reason, since its
+  published tiled inference is cheaper than Seq2Point. Seq2Point is proven on this dataset and fast
+  enough to train three seeds of every variant.
 - **Changes tested one at a time.** The gated and the augmented models each differ from Seq2Point in
   one respect, so their effect can be attributed; acceptance was decided on validation only.
 - **A seed ensemble as the shipped model.** It has the best validation scores at no extra training

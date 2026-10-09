@@ -33,6 +33,16 @@ def test_daily_statistics_reproduce_the_point_metrics():
     assert from_days["cycle_f1"] == pytest.approx(point["cycle_f1"], rel=1e-9)
 
 
+def test_daily_statistics_match_point_metrics_when_the_prediction_has_a_gap():
+    y, yhat = _synthetic(days=8, seed=2)
+    first_wash = int(np.flatnonzero(y.to_numpy() > 0)[0])
+    yhat.iloc[first_wash - 5 : first_wash + 85] = np.nan  # prediction missing across a whole true cycle
+    point = metrics.all_metrics(y, yhat)
+    from_days = U.metrics_from_days(U.daily_stats(y, yhat))
+    for k in ("nde", "epd_wh", "cycle_f1"):
+        assert from_days[k] == pytest.approx(point[k], rel=1e-9), k
+
+
 def test_bootstrap_interval_contains_the_point_estimate():
     y, yhat = _synthetic(days=20)
     d = U.daily_stats(y, yhat)

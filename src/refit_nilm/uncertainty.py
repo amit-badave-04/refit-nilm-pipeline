@@ -29,7 +29,8 @@ def daily_stats(y: pd.Series, yhat: pd.Series, rule: CycleRule = CycleRule(), io
     day = y.index.floor("D")
     sq = pd.DataFrame({"sum_y2": yv**2, "sum_err2": (pv - yv) ** 2}).groupby(day).sum()
     energy = daily_energy_errors(yv, pv)
-    tc, pc = detect_cycles(yv, rule), detect_cycles(pv.where(yv.notna()), rule)
+    # cycles exactly as metrics.cycle_scores detects them (truth on y, prediction masked where y is missing)
+    tc, pc = detect_cycles(y, rule), detect_cycles(yhat.where(y.notna()), rule)
     m = match_cycles(tc, pc, iou_min)
     count = lambda starts: pd.Series(1, index=pd.DatetimeIndex(starts).floor("D")).groupby(level=0).sum()  # noqa: E731
     out = sq[ok.groupby(day).sum() > 0].copy()  # days without a scored minute are not resampling units

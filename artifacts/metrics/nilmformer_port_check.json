@@ -1,0 +1,13 @@
+{
+  "original_commit": "e73a975a42fbebed6f9d7e90d75f7f48ae02fed9",
+  "parameter_tensors": 74,
+  "eval_max_abs_diff_input_scale_0.05": 3.259629011154175e-09,
+  "eval_max_abs_diff_input_scale_1.0": 5.960464477539063e-08,
+  "train_mode_max_abs_diff": 3.259629011154175e-09,
+  "train_mode_output_differs_from_eval": true,
+  "gradient_max_abs_diff": 3.0517578125e-05,
+  "gradient_max_abs_value": 1032.0,
+  "gradient_max_rel_diff": 2.9571296632751938e-08,
+  "tolerance": 1e-05,
+  "passed": true
+}
