@@ -8,6 +8,8 @@ primary_region = "lhr"
 
 [env]
   RATE_LIMIT_PER_MIN = "30"
+  MAX_POINTS = "2880"
+  ORT_THREADS = "1"
   MAX_BODY_BYTES = "2000000"
 
 [http_service]

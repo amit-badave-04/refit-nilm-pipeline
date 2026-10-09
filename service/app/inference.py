@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -26,14 +27,15 @@ class Prediction:
 
 
 class Engine:
-    def __init__(self, model_dir: Path = MODEL_DIR, batch_size: int = 4096):
+    def __init__(self, model_dir: Path = MODEL_DIR, batch_size: int = 4096, threads: int | None = None):
         self.card = json.loads((model_dir / "model_card.json").read_text(encoding="utf-8"))
         onnx_path = model_dir / self.card["artifact"]
         self.sha256 = hashlib.sha256(onnx_path.read_bytes()).hexdigest()
         if self.sha256 != self.card["sha256"]:
             raise RuntimeError("model file does not match the checksum in model_card.json")
         opts = ort.SessionOptions()
-        opts.intra_op_num_threads = 2
+        opts.intra_op_num_threads = threads or int(os.getenv("ORT_THREADS", 1))  # 1 vCPU on the default machine
+        opts.inter_op_num_threads = 1
         self.session = ort.InferenceSession(str(onnx_path), sess_options=opts, providers=["CPUExecutionProvider"])
         self.window = int(self.card["window"])
         self.batch_size = batch_size
