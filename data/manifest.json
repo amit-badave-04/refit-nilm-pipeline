@@ -1,0 +1,38 @@
+{
+  "dataset": "REFIT: Electrical Load Measurements (University of Strathclyde)",
+  "licence": "CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)",
+  "attribution": "Murray, D., Stankovic, L., Stankovic, V. (2017). An electrical load measurements dataset of United Kingdom households from a two-year longitudinal study. Scientific Data 4:160122. doi:10.1038/sdata.2016.122",
+  "dois": {
+    "raw": "10.15129/31da3ece-f902-4e95-a093-e0a9536983c4",
+    "cleaned": "10.15129/9ab14b0e-19ac-4279-938f-27f643078cec"
+  },
+  "files": {
+    "clean": {
+      "filename": "CLEAN_REFIT_081116.7z",
+      "bytes": 514265481,
+      "sha256": "4dc4dde763da1c843e9d565fc68f1a63752d858980615635994d7f701fdfcc4b",
+      "source": "https://pure.strath.ac.uk/ws/portalfiles/portal/62090184/CLEAN_REFIT_081116.7z",
+      "mirror": "https://github.com/amit-badave-04/refit-nilm-pipeline/releases/download/refit-data-081116/CLEAN_REFIT_081116.7z"
+    },
+    "raw": {
+      "filename": "REFIT_RAW_081116.7z",
+      "bytes": 698108465,
+      "sha256": "f294fe673532220dc527b5e7d7a25e99568bd24acf9fb5be0a0def14af64b2cf",
+      "source": "https://pure.strath.ac.uk/ws/portalfiles/portal/62090177/REFIT_RAW_081116.7z",
+      "mirror": "https://github.com/amit-badave-04/refit-nilm-pipeline/releases/download/refit-data-081116/REFIT_RAW_081116.7z"
+    },
+    "clean_readme": {
+      "filename": "CLEAN_READ_ME_081116.txt",
+      "bytes": 12020,
+      "sha256": "c5f5236fd5a7b29771913480fcef6e9be8a85d07511939c5a35160b7afc97bfb",
+      "source": "https://pure.strath.ac.uk/ws/portalfiles/portal/62090183/CLEAN_READ_ME_081116.txt",
+      "mirror": "https://github.com/amit-badave-04/refit-nilm-pipeline/releases/download/refit-data-081116/CLEAN_READ_ME_081116.txt"
+    }
+  },
+  "derived_not_versioned": {
+    "data/extracted/clean/CLEAN_House{N}.csv": "20 files, ~6.9 GB, extracted from CLEAN_REFIT_081116.7z",
+    "data/extracted/raw/RAW_House1_Part{1,2}.csv": "2 files, ~0.46 GB, extracted from REFIT_RAW_081116.7z",
+    "data/parquet/clean_house{N}_1min.parquet": "1-minute cache in true UTC, ~10 MB per house",
+    "data/parquet/raw_house1_clean_1min.parquet": "output of notebook 01"
+  }
+}

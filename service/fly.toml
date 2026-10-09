@@ -1,5 +1,5 @@
 # Fly.io deployment of the washing-machine disaggregation API.
-# Deploy from this folder:  fly launch --no-deploy --copy-config --name <app-name>  then  fly deploy
+# Deploy from this folder:  flyctl apps create refit-wm-nilm  then  flyctl deploy
 app = "refit-wm-nilm"
 primary_region = "lhr"
 

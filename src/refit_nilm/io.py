@@ -39,23 +39,40 @@ def sha256_of(path: Path, chunk: int = 1 << 20) -> str:
     return h.hexdigest()
 
 
+def _download(url: str, dest: Path) -> None:
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req, timeout=60) as resp, open(dest, "wb") as out:
+        shutil.copyfileobj(resp, out, length=1 << 20)
+
+
 def ensure_archive(key: str, data_dir: Path = C.DATA_DIR) -> Path:
-    """Return the local path of a release file, downloading it only if missing or corrupt."""
+    """Return the local path of a release file, downloading it only if missing or corrupt.
+
+    Tries the University of Strathclyde portal first, then the unmodified mirror attached to this
+    repository's GitHub release. Either way the file must match the pinned SHA-256.
+    """
     spec = C.ARCHIVES[key]
     path = data_dir / spec["filename"]
     if path.exists() and sha256_of(path) == spec["sha256"]:
         return path
     data_dir.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + ".part")
-    req = urllib.request.Request(spec["url"], headers={"User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(req) as resp, open(tmp, "wb") as out:
-        shutil.copyfileobj(resp, out, length=1 << 20)
-    digest = sha256_of(tmp)
-    if digest != spec["sha256"]:
-        tmp.unlink(missing_ok=True)
-        raise ValueError(f"{spec['filename']}: checksum mismatch ({digest})")
-    tmp.replace(path)
-    return path
+    errors = []
+    for url in (spec["url"], spec.get("mirror")):
+        if not url:
+            continue
+        try:
+            _download(url, tmp)
+        except OSError as exc:  # network errors, HTTP errors (urllib raises OSError subclasses)
+            errors.append(f"{url}: {exc}")
+            continue
+        digest = sha256_of(tmp)
+        if digest == spec["sha256"]:
+            tmp.replace(path)
+            return path
+        errors.append(f"{url}: checksum mismatch ({digest})")
+    tmp.unlink(missing_ok=True)
+    raise RuntimeError(f"could not obtain {spec['filename']}: " + "; ".join(errors))
 
 
 def find_7z() -> str:

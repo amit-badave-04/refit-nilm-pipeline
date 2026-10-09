@@ -1,10 +1,19 @@
 # ---- private / personal material: never commit ----
 *.pdf
 *.eml
-Research/
 
-# ---- data (REFIT is CC BY 4.0; fetched by scripts/prepare_data.py, never committed) ----
-Data/
+# ---- data: only documentation and the small manifest are versioned ----
+# REFIT archives (1.2 GB), extracted CSVs (~7 GB) and the Parquet cache are rebuilt by
+# scripts/prepare_data.py; see data/README.md.
+data/*
+!data/README.md
+!data/manifest.json
+!data/CLEAN_READ_ME_081116.txt
+
+# ---- research: notes are versioned; third-party papers are fetched locally, not redistributed ----
+research/papers/
+research/dataset/
+
 *.7z
 *.csv
 !artifacts/**/*.csv
@@ -23,12 +32,12 @@ htmlcov/
 .env
 .venv/
 
-# ---- model weights: only the exported ONNX + small checkpoints are versioned ----
+# ---- model checkpoints: rebuilt by the notebooks; only the exported ONNX model is versioned ----
 artifacts/models/*.pt
 artifacts/models/*.ckpt
+artifacts/models/*.txt
 
 # ---- os / editor ----
 .DS_Store
 Thumbs.db
 .vscode/
-artifacts/models/*.txt

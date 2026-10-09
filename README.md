@@ -1,5 +1,9 @@
 # REFIT washing-machine disaggregation
 
+[![ci](https://github.com/amit-badave-04/refit-nilm-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/amit-badave-04/refit-nilm-pipeline/actions/workflows/ci.yml)
+
+**Live API:** [https://refit-wm-nilm.fly.dev](https://refit-wm-nilm.fly.dev/docs) (interactive docs at `/docs`, health at `/health`). Usage and a real example: [`service/README.md`](service/README.md).
+
 A reproducible pipeline that cleans raw smart-meter data, characterises washing-machine use across
 UK homes, and estimates washing-machine power from the whole-home signal alone, evaluated on homes
 the model has never seen. Built on the REFIT Electrical Load Measurements dataset (University of
@@ -25,7 +29,7 @@ Strathclyde, 20 UK homes, 2013–2015).
 | **Six unseen homes (mean)** | NDE 0.83 (lowest of all models); daily energy error 181 vs 308 Wh/day for predicting nothing; beats every baseline on every energy metric |
 | **Negative results, reported** | an on/off gate made the model worse; distractor augmentation failed the acceptance rule fixed before training |
 | **15/30-minute data** | a model fed only 15/30-minute data loses all per-interval skill; 1-minute input is required |
-| **Service** | int8 ONNX ensemble (12.7 MB, metric parity with PyTorch) behind a validated FastAPI endpoint, containerised for Fly.io |
+| **Service** | int8 ONNX ensemble (12.6 MB, metric parity with PyTorch) behind a validated FastAPI endpoint, live at [https://refit-wm-nilm.fly.dev](https://refit-wm-nilm.fly.dev/docs) |
 
 ## What I built
 
@@ -64,9 +68,11 @@ Strathclyde, 20 UK homes, 2013–2015).
 │   ├── models/seq2point.py  Seq2Point and gated Seq2Point
 │   ├── train.py           GPU training loop, early stopping, checkpoints
 │   └── metrics.py         MAE, MAE_ON, SAE, NDE, EpD, F1, AUPRC, cycle-level and energy-split metrics
-├── notebooks/             01–06 incl. 05b (.py sources and executed .ipynb)
+├── notebooks/             01–06 incl. 05b, executed .ipynb (the notebooks are the source)
 ├── scripts/               prepare_data.py, run_notebooks.py, export_onnx.py, check_onnx_parity.py,
-│                          set_summary.py / edit_markdown.py (edit notebook text without re-running)
+│                          edit_markdown.py (edit notebook prose without re-running)
+├── data/                  REFIT data: README + manifest (SHA-256, sources) versioned; archives and caches rebuilt
+├── research/              reading list, protocol notes, script to fetch the open-access papers
 ├── tests/                 unit tests for the library
 ├── service/               FastAPI + ONNX inference service, its tests, Dockerfile, fly.toml
 ├── artifacts/             versioned outputs: figures, tables, metrics JSON, training logs (checkpoints are rebuilt, not versioned)
@@ -93,7 +99,7 @@ uv pip install -e . "onnx==1.23.2" onnxscript "onnxruntime==1.30.0" fastapi "uvi
 # 3. Jupyter kernel used by the notebooks
 python -m ipykernel install --user --name refit-nilm --display-name refit-nilm
 
-# 4. data: downloads ~1.2 GB (skipped if the archives are already in Data/), verifies SHA-256,
+# 4. data: downloads ~1.2 GB (skipped if the archives are already in data/), verifies SHA-256,
 #    extracts and builds the 1-minute cache (~7 GB on disk)
 python scripts/prepare_data.py
 
@@ -104,8 +110,8 @@ python scripts/run_notebooks.py
 
 `requirements-lock.txt` pins every package version of the environment the results were produced
 with. **Reproducibility check:** a fresh clone of this repository, run end to end with the steps above, regenerated every results table identically (largest difference 1.5e-5, one LightGBM cell) and
-the training curves to five decimals; GPU runs are seeded and deterministic (`artifacts/metrics/reproducibility_check.json`). The notebooks are written as percent-format `.py` files (readable diffs) and executed into
-`.ipynb` by `scripts/run_notebooks.py`; open either in VS Code or Jupyter.
+the training curves to five decimals; GPU runs are seeded and deterministic (`artifacts/metrics/reproducibility_check.json`). `scripts/run_notebooks.py` executes the `.ipynb` notebooks in place, in order; open them in VS Code
+or Jupyter with the `refit-nilm` kernel.
 
 ## Key assumptions and preprocessing decisions
 
@@ -170,5 +176,8 @@ All analysis decisions, verification of results and interpretation are my own.
 
 ## Licence and data
 
-Code: MIT (`LICENSE`). Data: REFIT is CC BY 4.0 (Murray, Stankovic & Stankovic 2017); it is
-downloaded by `scripts/prepare_data.py` and not redistributed here.
+Code: MIT (`LICENSE`). Data: REFIT Electrical Load Measurements, University of Strathclyde, CC BY 4.0
+(Murray, Stankovic & Stankovic 2017, *Scientific Data* 4:160122). `scripts/prepare_data.py` downloads it
+from the university portal and falls back to an unmodified, attributed copy on this repository's release
+[`refit-data-081116`](https://github.com/amit-badave-04/refit-nilm-pipeline/releases/tag/refit-data-081116);
+both are checked against the SHA-256 in `data/manifest.json`.

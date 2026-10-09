@@ -68,3 +68,32 @@ def test_real_readme_matches_reference_code():
     wm = io.washing_machine_channels(io.parse_appliance_map(path))
     assert io.check_against_reference(wm) == []
     assert wm[12] == []
+
+
+def test_ensure_archive_falls_back_to_mirror_and_checks_sha(tmp_path, monkeypatch):
+    import hashlib
+
+    payload = b"refit-archive-bytes"
+    spec = {"filename": "x.7z", "url": "https://portal.example/x.7z", "mirror": "https://mirror.example/x.7z",
+            "sha256": hashlib.sha256(payload).hexdigest(), "bytes": len(payload)}
+    monkeypatch.setitem(C.ARCHIVES, "test", spec)
+    calls = []
+
+    def fake_download(url, dest):
+        calls.append(url)
+        if "portal" in url:
+            raise OSError("HTTP 403 (interactive browser check)")
+        dest.write_bytes(payload)
+
+    monkeypatch.setattr(io, "_download", fake_download)
+    path = io.ensure_archive("test", tmp_path)
+    assert path.read_bytes() == payload and calls == [spec["url"], spec["mirror"]]
+
+
+def test_ensure_archive_rejects_wrong_checksum(tmp_path, monkeypatch):
+    spec = {"filename": "y.7z", "url": "https://portal.example/y.7z", "mirror": None, "sha256": "0" * 64, "bytes": 1}
+    monkeypatch.setitem(C.ARCHIVES, "test", spec)
+    monkeypatch.setattr(io, "_download", lambda url, dest: dest.write_bytes(b"tampered"))
+    with pytest.raises(RuntimeError, match="checksum mismatch"):
+        io.ensure_archive("test", tmp_path)
+    assert not (tmp_path / "y.7z").exists()

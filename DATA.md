@@ -16,11 +16,13 @@ are named next to each claim.
 | Quantity / unit | active power, watts; no voltage, current, reactive power or power factor |
 | Sampling | logger polled every 6–8 s; a value was stored only when it changed; sensors not synchronised |
 | Files used | raw `REFIT_RAW_081116.7z` → `RAW_House1_Part1.csv`, `RAW_House1_Part2.csv` (Requirement 1); cleaned `CLEAN_REFIT_081116.7z` → `CLEAN_House{N}.csv`, all 20 houses (Requirements 2–3); `CLEAN_READ_ME_081116.txt` for the appliance-to-channel map |
-| Integrity | SHA-256 of both archives pinned in `src/refit_nilm/config.py` and checked before use |
+| Integrity | SHA-256 of both archives pinned in `src/refit_nilm/config.py` and `data/manifest.json`, checked before use |
+| Location | `data/` (see [`data/README.md`](data/README.md)); only the README, manifest and dataset README are versioned |
 
 The portal links in the brief (`pureportal.strath.ac.uk/files/...`) sit behind an interactive
 browser check; `scripts/prepare_data.py` downloads the identical files from the equivalent
-`pure.strath.ac.uk/ws/portalfiles/portal/...` addresses and verifies the checksums.
+`pure.strath.ac.uk/ws/portalfiles/portal/...` addresses, falls back to an unmodified copy on this
+repository's release `refit-data-081116` (CC BY 4.0, attributed), and verifies the checksums.
 
 **Appliance map.** Parsed from the README (`io.parse_appliance_map`) rather than typed by hand,
 and cross-checked against the washing-machine columns used by the reference code of D'Incecco et

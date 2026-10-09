@@ -1,10 +1,12 @@
 # Washing-machine disaggregation API
 
+**Live:** https://refit-wm-nilm.fly.dev · interactive docs: [https://refit-wm-nilm.fly.dev/docs](https://refit-wm-nilm.fly.dev/docs) · health: [https://refit-wm-nilm.fly.dev/health](https://refit-wm-nilm.fly.dev/health)
+
 A small production-style service around the primary model (three-seed Seq2Point ensemble, 81-minute
 window). It takes 1-minute whole-home active power and returns the estimated washing-machine power,
 an agreement score, detected cycles and a summary.
 
-* **Model:** `model/model.onnx` (int8 weights, 12.7 MB) with standardisation and ensembling inside
+* **Model:** `model/model.onnx` (int8 weights, 12.6 MB) with standardisation and ensembling inside
   the graph, so the image needs only onnxruntime + numpy (no PyTorch). `model/model_card.json` holds
   training data, validation and test scores, and limits of use; its SHA-256 is checked at start-up.
 * **Parity:** on all of House 8 the int8 model scores NDE 0.740 / cycle F1 0.569 vs 0.737 / 0.564
@@ -65,14 +67,21 @@ container on every push.
 ## Deploy to Fly.io
 
 ```bash
-fly auth login
-fly launch --no-deploy --copy-config --name <app-name>   # from this folder; keeps fly.toml
-fly deploy
-curl https://<app-name>.fly.dev/health
+flyctl auth login
+flyctl apps create refit-wm-nilm     # from this folder; fly.toml already holds the configuration
+flyctl deploy                        # remote build, no local Docker needed
+curl https://refit-wm-nilm.fly.dev/health
 ```
 
-`fly.toml` runs one shared-CPU machine with 512 MB in London (`lhr`), stops it when idle and starts
-it on the next request, and health-checks `/health`. The image runs as a non-root user.
+Try the deployed service with the real example:
+
+```bash
+curl -s -X POST https://refit-wm-nilm.fly.dev/v1/disaggregate -H "content-type: application/json" --data-binary @examples/house8_2014-04-15.json
+```
+
+`fly.toml` runs shared-CPU machines with 512 MB in London (`lhr`); Fly creates two for availability,
+stops them when idle and starts one on the next request (the first call after idling takes a few
+seconds), and health-checks `/health`. The image runs as a non-root user.
 
 ## Operational notes and limits
 

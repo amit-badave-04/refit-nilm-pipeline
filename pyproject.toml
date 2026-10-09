@@ -6,6 +6,9 @@ build-backend = "setuptools.build_meta"
 name = "refit-nilm"
 version = "0.1.0"
 description = "Cleaning, EDA and washing-machine disaggregation on the REFIT dataset"
+readme = "README.md"
+license = "MIT"
+authors = [{ name = "Amit Badave" }]
 requires-python = ">=3.11"
 
 [tool.setuptools.packages.find]
