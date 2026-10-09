@@ -1,0 +1,22 @@
+{
+  "device": "NVIDIA GeForce RTX 5090 Laptop GPU",
+  "torch": "2.14.1+cu130",
+  "seed": 42,
+  "epochs_run": 11,
+  "compared_with": "artifacts/models/m5_nilmformer_l129_s42.pt (written by notebook 07)",
+  "identical_weights": true,
+  "identical_validation_curve": true,
+  "val_nde_by_epoch": [
+    1.1399362087249756,
+    1.2946900129318237,
+    1.1927567720413208,
+    1.1519676446914673,
+    1.1662014722824097,
+    1.8497610092163086,
+    1.979823350906372,
+    1.5898199081420898,
+    1.6587631702423096,
+    1.7193727493286133,
+    1.8913158178329468
+  ]
+}
