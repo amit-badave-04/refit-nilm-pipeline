@@ -251,7 +251,7 @@ sequenceDiagram
         A->>A: detect cycles (20 W, 3-min gaps, 30-min minimum) and energy summary
         A-->>C: power, agreement, cycles, summary, warnings
     end
-    A->>A: JSON log line (path, status, latency; no payload)
+    A->>A: JSON log line with path, status and latency, no payload
 ```
 
 ### Build, test and deploy
