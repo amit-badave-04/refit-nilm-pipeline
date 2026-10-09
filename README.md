@@ -48,7 +48,7 @@ rules) and [`service/app/main.py`](service/app/main.py) (the API).
 - **Evidence-first evaluation.** The reference REFIT split plus five more unseen homes, a seen-home
   temporal test, energy-, minute- and cycle-level metrics, failure attribution to the appliances that
   caused it, and a 15/30-minute smart-meter study. A 2025 transformer is tested as a challenger
-  under a rule committed before training, and bootstrap intervals show how far each number can be
+  under the same acceptance rule as every variant, and bootstrap intervals show how far each number can be
   trusted.
 - **A production-style inference service.** Torch-free ONNX runtime, validated inputs, rate limits,
   structured logs, a model card and contract tests in CI, deployed on Fly.io.
@@ -137,8 +137,11 @@ candidate is accepted or rejected on the validation home (House 18), with three 
 | Seq2Point, W = 237 | 0.80 (seed 42) | 0.52 (seed 42) | window 81 chosen |
 | on/off-gated Seq2Point (subtask gating) | 0.83 ± 0.03 | 0.47 ± 0.04 | not adopted |
 | Seq2Point + distractor-appliance augmentation | 0.61 ± 0.08 | 0.57 ± 0.08 | not adopted (acceptance rule fixed before training) |
-| NILMFormer transformer (KDD 2025), published recipe | 1.11 ± 0.06 | 0.07 ± 0.06 | not adopted (rule fixed before training; 16× the CPU cost) |
+| NILMFormer transformer (KDD 2025), published recipe † | 1.11 ± 0.06 | 0.07 ± 0.06 | not adopted (same acceptance rule; 16× the CPU cost) |
 | **Seq2Point seed ensemble** | **0.60** | **0.64** | **primary** |
+
+† On the minutes both models can score; on those minutes Seq2Point scores 0.675 ± 0.051 and
+0.603 ± 0.016 (notebook 07).
 
 ## Stack choice and why
 
@@ -360,7 +363,7 @@ python -m ipykernel install --user --name refit-nilm --display-name refit-nilm
 # 4. data: download (or reuse data/), verify SHA-256, extract, build the 1-minute cache (~7 GB)
 python scripts/prepare_data.py
 
-# 5. tests, then every notebook in order (about 2 h with a laptop GPU; writes artifacts/)
+# 5. tests, then every notebook in order (about 1.5 h with a laptop GPU; writes artifacts/)
 python -m pytest -q
 python scripts/run_notebooks.py
 
@@ -370,8 +373,10 @@ cd service && uvicorn app.main:app --port 8080
 ```
 
 **Reproducibility check:** a fresh clone run end to end with these steps regenerated every results
-table identically (largest difference 1.5e-5, in one LightGBM cell) and the training curves to five
-decimals (`artifacts/metrics/reproducibility_check.json`).
+table of notebooks 01–06 identically (largest difference 1.5e-5, in one LightGBM cell) and the training curves to five
+decimals (`artifacts/metrics/reproducibility_check.json`). Notebook 07's transformer training
+repeats to about two decimals in validation NDE rather than bit for bit, most likely because GPU
+attention kernels are not deterministic. Notebook 08 involves no training.
 
 ## Assumptions and preprocessing decisions
 
@@ -388,7 +393,7 @@ decimals (`artifacts/metrics/reproducibility_check.json`).
 ## Design trade-offs
 
 - **Seq2Point over a Transformer, now tested.** NILMFormer (KDD 2025) lost on validation by a wide
-  margin under a rule fixed before training. It costs 16× the CPU per prediction. Seq2Point is
+  margin under the same acceptance rule as every other variant. It costs 16× the CPU per prediction. Seq2Point is
   proven on this dataset and fast enough to train three seeds of every variant.
 - **Changes tested one at a time.** The gated and the augmented models each differ from Seq2Point in
   one respect, so their effect can be attributed; acceptance was decided on validation only.

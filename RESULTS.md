@@ -17,13 +17,14 @@ brackets). Data preparation and cleaning decisions are in [`DATA.md`](DATA.md).
   1.40).
 * **How certain.** Within a home the numbers are tight: House 8 NDE has a 95 % interval of
   0.72–0.76. Between homes they are not: the six-home mean NDE of 0.83 has an interval of 0.61–1.09.
-  For a targeting campaign, the model ranks homes by hot-wash frequency well (ρ = 0.94), but it
-  overstates the share of washing in the evening peak.
+  For a targeting campaign, the model ranks homes by hot-wash frequency well (ρ = 0.94 on six
+  unseen homes, 0.88 on 13 held-out periods; few homes, so indicative), but it overstates the share
+  of washing in the evening peak.
 * **Two negative results, reported as such:** gating the output by an on/off classifier made things
   worse; training with distractor appliances helped energy-weighted error but failed the
   acceptance rule fixed before training, on cycle detection.
-* **A 2025 transformer did not beat it.** NILMFormer (KDD 2025), tested under a rule committed
-  before training, was worse than predicting zero on the validation home (NDE 1.11 vs 0.68). It
+* **A 2025 transformer did not beat it.** NILMFormer (KDD 2025), tested under the same acceptance
+  rule as every other variant, was worse than predicting zero on the validation home (NDE 1.11 vs 0.68). It
   found far fewer washes on the unseen homes (cycle F1 0.11 vs 0.48) and costs 16× the CPU. A
   larger training budget fitted the training homes better but did not transfer.
 * **15/30-minute meters.** A model that only sees 15- or 30-minute data loses its skill (worse than
@@ -174,8 +175,10 @@ public code and published 1-minute REFIT washing-machine results.
 * **The port.** I ported its Apache-2.0 code into one module. A script checks it against the
   original repository: identical weights give outputs equal to within 10⁻⁸.
 * **The recipe.** I trained it with its published recipe on the same homes, masks and metrics.
-* **The rule.** Committed before any training: NILMFormer replaces Seq2Point only if it wins on
-  both validation NDE and cycle F1 by more than the larger seed spread.
+* **The rule.** The same acceptance rule as for every earlier variant: NILMFormer replaces
+  Seq2Point only if it wins on both validation NDE and cycle F1 by more than the larger seed spread.
+  I committed it before the full training run. Only a 2-epoch timing check and a 1-epoch
+  end-to-end check of the code ran before that.
 
 [`nb07_validation_per_seed.csv`, `nb07_unseen_ensembles.csv`, `nb07_summary.json`]
 

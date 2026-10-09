@@ -35,9 +35,9 @@ lever than temperature.
 nudge — in-app message, bill insert or on-demand advice — selected using the model's cycle
 detection. I tested this use directly. The model under-counts hot washes, but it ranks homes by
 hot-wash frequency well: Spearman 0.94 across six unseen homes, and 0.88 across 13 held-out
-periods. So the campaign should take the top of the predicted ranking rather than apply a fixed
+periods (few homes, so indicative). So the campaign should take the top of the predicted ranking rather than apply a fixed
 count threshold. One caution: the model can assign heating-level power to unheated washes. A home
-that never heated water got 12 false "hot" washes in 59 weeks, so targeting should be checked
+with no heated wash in its test period got 12 false "hot" washes in 59 weeks, so targeting should be checked
 against the calibration panel below.
 
 **Expected size (stated assumptions).** Heating energy scales with the temperature rise; with
