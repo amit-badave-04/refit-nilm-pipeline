@@ -32,6 +32,38 @@ from refit_nilm import train as T
 OUT = C.PROJECT_ROOT / "service" / "model"
 
 
+
+LEAK_PATTERNS = [rb":\Users", rb":/Users", rb"/home/", rb"site-packages", rb"stack_trace"]
+
+
+def strip_metadata(proto: "onnx.ModelProto") -> "onnx.ModelProto":
+    """Remove exporter metadata (source stack traces, file paths, module names) from every node.
+
+    The PyTorch exporter records, per node, the Python stack trace and module hierarchy it came
+    from. They are useful for debugging but embed absolute paths of the machine that exported
+    the model, so they must not ship.
+    """
+    graphs = [proto.graph] + [f for f in proto.functions]
+    for g in graphs:
+        nodes = g.node
+        for n in nodes:
+            del n.metadata_props[:]
+            n.doc_string = ""
+        if hasattr(g, "doc_string"):
+            g.doc_string = ""
+        if hasattr(g, "metadata_props"):
+            del g.metadata_props[:]
+    del proto.metadata_props[:]
+    proto.doc_string = ""
+    return proto
+
+
+def assert_no_local_paths(path: Path) -> None:
+    data = path.read_bytes()
+    bad = [pat.decode() for pat in LEAK_PATTERNS if pat in data]
+    if bad:
+        raise SystemExit(f"{path.name}: exported model still contains {bad}; refusing to write it")
+
 class Deployable(torch.nn.Module):
     """One or more members (seed ensemble) behind a single watts-in / watts-out interface.
 
@@ -83,11 +115,15 @@ def main() -> None:
     # onnx shape inference during quantisation)
     proto = onnx.load(str(fp32))
     del proto.graph.value_info[:]
+    strip_metadata(proto)
     for extra in OUT.glob("model_fp32.onnx*"):
         extra.unlink()
     onnx.save(proto, str(fp32), save_as_external_data=False)
     int8 = OUT / "model.onnx"
     quantize_dynamic(str(fp32), str(int8), weight_type=QuantType.QInt8, per_channel=True)
+    q = strip_metadata(onnx.load(str(int8)))
+    onnx.save(q, str(int8), save_as_external_data=False)
+    assert_no_local_paths(int8)
 
     # parity on real windows from the test house. onnxruntime runs in a separate process: on
     # Windows the PyTorch and onnxruntime wheels ship different OpenMP runtimes.

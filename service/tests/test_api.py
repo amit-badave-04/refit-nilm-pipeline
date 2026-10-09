@@ -84,3 +84,12 @@ def test_input_validation(client, payload, fragment):
 def test_oversized_body_rejected(client):
     r = client.post("/v1/disaggregate", content=b"x" * 10, headers={"content-length": str(10_000_000), "content-type": "application/json"})
     assert r.status_code == 413
+
+
+def test_model_file_carries_no_build_machine_metadata():
+    """The exporter's per-node stack traces embed absolute paths; they must be stripped."""
+    from pathlib import Path
+
+    data = (Path(__file__).resolve().parents[1] / "model" / "model.onnx").read_bytes()
+    for pattern in (b":\Users", b":/Users", b"/home/", b"site-packages", b"stack_trace"):
+        assert pattern not in data, pattern
