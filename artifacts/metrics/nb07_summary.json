@@ -1,0 +1,189 @@
+{
+  "window_seq2point": 81,
+  "window_nilmformer": 129,
+  "seeds": [
+    42,
+    10,
+    20
+  ],
+  "parameters": {
+    "seq2point": 4186649,
+    "nilmformer": 383283
+  },
+  "nilmformer_scale_w": 10000.0,
+  "nilmformer_epochs": {
+    "42": {
+      "epochs": 11,
+      "best_epoch": 1
+    },
+    "10": {
+      "epochs": 17,
+      "best_epoch": 7
+    },
+    "20": {
+      "epochs": 12,
+      "best_epoch": 2
+    }
+  },
+  "validation_shared_minutes": 551367,
+  "validation": {
+    "mean": {
+      "NILMFormer": {
+        "nde": 1.1077,
+        "cycle_f1": 0.0674
+      },
+      "Seq2Point": {
+        "nde": 0.6746,
+        "cycle_f1": 0.6034
+      }
+    },
+    "sd": {
+      "NILMFormer": {
+        "nde": 0.0552,
+        "cycle_f1": 0.0551
+      },
+      "Seq2Point": {
+        "nde": 0.0505,
+        "cycle_f1": 0.0159
+      }
+    },
+    "margin": {
+      "nde": 0.0552,
+      "cycle_f1": 0.0551
+    },
+    "nilmformer_better_nde": false,
+    "nilmformer_better_cycle_f1": false,
+    "decision": "Seq2Point stays"
+  },
+  "validation_ensemble": {
+    "Seq2Point": {
+      "nde": 0.602,
+      "cycle_f1": 0.644,
+      "mae_w": 5.202,
+      "epd_wh": 80.747,
+      "f1": 0.429,
+      "sae": 0.59,
+      "overlap_pct": 62.5,
+      "extra_pct": 96.505
+    },
+    "NILMFormer": {
+      "nde": 1.061,
+      "cycle_f1": 0.064,
+      "mae_w": 17.33,
+      "epd_wh": 277.128,
+      "f1": 0.094,
+      "sae": 2.899,
+      "overlap_pct": 21.728,
+      "extra_pct": 368.183
+    }
+  },
+  "fit_diagnosis_nde_mean": {
+    "NILMFormer": {
+      "seen_test": 0.826,
+      "train": 0.83,
+      "val": 1.108
+    },
+    "Seq2Point": {
+      "seen_test": 0.623,
+      "train": 0.259,
+      "val": 0.675
+    }
+  },
+  "optimiser_steps": {
+    "seq2point": {
+      "42": 52640,
+      "10": 112800,
+      "20": 45120
+    },
+    "nilmformer": {
+      "42": 5016,
+      "10": 7752,
+      "20": 5472
+    }
+  },
+  "exploratory": {
+    "factor": 8,
+    "epochs": 12,
+    "best_epoch": 2,
+    "validation": {
+      "nde": 1.151,
+      "cycle_f1": 0.1309,
+      "mae_w": 23.8472,
+      "epd_wh": 413.2177,
+      "f1": 0.0584,
+      "sae": 4.6156,
+      "overlap_pct": 23.5992,
+      "extra_pct": 537.9634
+    },
+    "fit_nde": {
+      "train": 0.784,
+      "seen_test": 0.787
+    }
+  },
+  "house8": {
+    "Seq2Point": {
+      "nde": 0.736,
+      "cycle_f1": 0.566,
+      "mae_w": 23.567,
+      "epd_wh": 339.709,
+      "f1": 0.493,
+      "sae": 0.283,
+      "overlap_pct": 37.998,
+      "extra_pct": 33.691
+    },
+    "NILMFormer": {
+      "nde": 0.905,
+      "cycle_f1": 0.17,
+      "mae_w": 41.143,
+      "epd_wh": 466.054,
+      "f1": 0.184,
+      "sae": 0.011,
+      "overlap_pct": 17.014,
+      "extra_pct": 84.068
+    }
+  },
+  "unseen_mean": {
+    "NILMFormer": {
+      "nde": 0.919,
+      "cycle_f1": 0.114,
+      "mae_w": 21.279,
+      "epd_wh": 256.557,
+      "f1": 0.213,
+      "sae": 0.5,
+      "overlap_pct": 18.794,
+      "extra_pct": 119.622
+    },
+    "Seq2Point": {
+      "nde": 0.826,
+      "cycle_f1": 0.482,
+      "mae_w": 13.096,
+      "epd_wh": 182.213,
+      "f1": 0.507,
+      "sae": 0.312,
+      "overlap_pct": 42.33,
+      "extra_pct": 59.295
+    }
+  },
+  "unseen_cycle_f1_per_home": {
+    "NILMFormer": {
+      "1": 0.059,
+      "6": 0.212,
+      "8": 0.17,
+      "10": 0.163,
+      "19": 0.008,
+      "20": 0.071
+    },
+    "Seq2Point": {
+      "1": 0.169,
+      "6": 0.523,
+      "8": 0.566,
+      "10": 0.646,
+      "19": 0.736,
+      "20": 0.253
+    }
+  },
+  "cpu_seconds_per_day_single_model": {
+    "Seq2Point": 0.185,
+    "NILMFormer": 2.854
+  }
+}

@@ -31,7 +31,9 @@ REFIT data unless stated, so they are context, not a leaderboard for my 1-minute
    load monitoring that accounts for non-stationarity. *KDD 2025*. arXiv:2506.05880.
    *Adopted:* the 1-minute REFIT preprocessing (mean resampling, forward-fill ≤ 3 minutes, clipping,
    dropping windows with remaining gaps). Its 1-minute washer table is cited as outside context.
-   NILMFormer itself is the first item under "next steps".
+   *Tested:* the model itself, ported from the authors' Apache-2.0 code (EDF) with the published
+   recipe, as a challenger in notebook 07. It did not transfer to new homes in this split.
+   Validation NDE was 1.11 against 0.68 for Seq2Point, so it was not adopted.
 6. **Shin, C., Joo, S., Yim, J., Lee, H., Moon, T., Rhee, W. (2019).** Subtask gated networks for
    non-intrusive load monitoring. *AAAI-33*. arXiv:1811.06692.
    *Adopted:* gating the regressed power by a learned on-probability (my M3).
@@ -89,6 +91,22 @@ REFIT data unless stated, so they are context, not a leaderboard for my 1-minute
     overlapping, missing and extra energy. Its datasets and per-appliance results were not checked
     (full text not accessed).
 
+## Uncertainty (notebook 08)
+
+26. **Efron, B., Tibshirani, R. J. (1993).** *An Introduction to the Bootstrap.* Chapman & Hall,
+    Monographs on Statistics and Applied Probability 57.
+    *Adopted:* the percentile bootstrap interval.
+27. **Politis, D. N., Romano, J. P. (1994).** The stationary bootstrap. *Journal of the American
+    Statistical Association* 89(428):1303–1313. doi:10.1080/01621459.1994.10476870.
+    *Adopted:* resampling runs of consecutive days (mean length 7) as a robustness check on the
+    one-day blocks.
+28. **Field, C. A., Welsh, A. H. (2007).** Bootstrapping clustered data. *Journal of the Royal
+    Statistical Society B* 69(3):369–390. doi:10.1111/j.1467-9868.2007.00593.x.
+    *Adopted:* resampling whole homes (the cluster bootstrap) for the across-home interval.
+29. **Cameron, A. C., Gelbach, J. B., Miller, D. L. (2008).** Bootstrap-based improvements for
+    inference with clustered errors. *Review of Economics and Statistics* 90(3):414–427.
+    *Used for:* the caveat that intervals from few clusters (six homes here) are unreliable.
+
 ## Resolution, savings and transfer
 
 17. **Petralia, A., Charpentier, P., Boniol, P., Palpanas, T. (2023).** Appliance detection using
@@ -125,5 +143,6 @@ REFIT data unless stated, so they are context, not a leaderboard for my 1-minute
   stated sampling rate inconsistent with REFIT.
 * **DiffNILM** (*Sensors* 2023) and LLM-prompting NILM (arXiv 2025): weaker or unreported on REFIT
   washing machines at the time of writing.
-* **Transformer models** (e.g. NILMFormer, item 5): not built in this version; listed as a next
-  step.
+* **Other transformers** (BERT4NILM, Energformer): NILMFormer (item 5) was the one
+  tested, as the only transformer with public code and published 1-minute REFIT washing-machine
+  results. BERT4NILM's code carries no licence.

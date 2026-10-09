@@ -41,6 +41,7 @@ class Seq2SeqConfig:
     patience: int = 10
     lr_patience: int = 5
     val_stride: int = 1
+    windows_per_epoch_factor: int = 1  # 1 = the published budget (training minutes tiled once per epoch)
 
 
 def calendar_features(epoch_s: np.ndarray) -> np.ndarray:
@@ -124,7 +125,7 @@ def fit(corpus: Corpus, cfg: Seq2SeqConfig, device: str = "cuda") -> tuple[torch
     opt = torch.optim.Adam(model.parameters(), lr=cfg.lr)
     sched = torch.optim.lr_scheduler.ReduceLROnPlateau(opt, mode="min", patience=cfg.lr_patience)
     train_starts = torch.as_tensor(corpus.starts["train"], device=device)
-    n_draw = int(np.ceil(len(train_starts) / cfg.window))
+    n_draw = cfg.windows_per_epoch_factor * int(np.ceil(len(train_starts) / cfg.window))
     val_starts = corpus.starts["val"][:: cfg.val_stride]
     y_val = corpus.wm[val_starts + corpus.window // 2]
     gen = torch.Generator(device=device)

@@ -47,7 +47,9 @@ rules) and [`service/app/main.py`](service/app/main.py) (the API).
   **42 %** relative to a no-information baseline.
 - **Evidence-first evaluation.** The reference REFIT split plus five more unseen homes, a seen-home
   temporal test, energy-, minute- and cycle-level metrics, failure attribution to the appliances that
-  caused it, and a 15/30-minute smart-meter study.
+  caused it, and a 15/30-minute smart-meter study. A 2025 transformer is tested as a challenger
+  under a rule committed before training, and bootstrap intervals show how far each number can be
+  trusted.
 - **A production-style inference service.** Torch-free ONNX runtime, validated inputs, rate limits,
   structured logs, a model card and contract tests in CI, deployed on Fly.io.
 - **Reproducible to the byte.** Pinned environment, checksummed data and seeded GPU training; a fresh
@@ -93,6 +95,10 @@ daily washing-energy error.
 On later data from the training homes (the seen-home test) the same model reaches NDE 0.57 and minute
 F1 0.61. Full tables, per-home scores and the failure analysis are in [`RESULTS.md`](RESULTS.md).
 
+**How certain (notebook 08).** 95 % intervals from resampling whole days: House 8 NDE 0.72–0.76,
+cycle F1 0.52–0.60. Across the six homes, resampling whole homes gives a mean NDE interval of
+0.61–1.09. The real uncertainty is the next home, not the next month.
+
 ![House 8: actual vs predicted washing-machine power](artifacts/figures/nb06_actual_vs_predicted_days.png)
 
 ### Washing behaviour (19 homes, 6,334 clean cycles)
@@ -122,8 +128,8 @@ what makes disaggregation work, and its results can then be reported at any coar
 
 ### Model selection
 
-Every candidate changes one thing relative to Seq2Point and is accepted or rejected on the validation
-home (House 18), with three seeds each unless stated:
+Each variant changes one thing relative to Seq2Point, and the transformer replaces it outright. Every
+candidate is accepted or rejected on the validation home (House 18), with three seeds each unless stated:
 
 | candidate | validation NDE | cycle F1 | decision |
 |---|---|---|---|
@@ -131,6 +137,7 @@ home (House 18), with three seeds each unless stated:
 | Seq2Point, W = 237 | 0.80 (seed 42) | 0.52 (seed 42) | window 81 chosen |
 | on/off-gated Seq2Point (subtask gating) | 0.83 ± 0.03 | 0.47 ± 0.04 | not adopted |
 | Seq2Point + distractor-appliance augmentation | 0.61 ± 0.08 | 0.57 ± 0.08 | not adopted (acceptance rule fixed before training) |
+| NILMFormer transformer (KDD 2025), published recipe | 1.11 ± 0.06 | 0.07 ± 0.06 | not adopted (rule fixed before training; 16× the CPU cost) |
 | **Seq2Point seed ensemble** | **0.60** | **0.64** | **primary** |
 
 ## Stack choice and why
@@ -141,12 +148,12 @@ home (House 18), with three seeds each unless stated:
 | Data access | `scripts/prepare_data.py`: SHA-256-pinned archives, conda-forge 7-Zip, attributed release mirror | The portal's links sit behind a browser check; the script uses the direct file endpoints, falls back to an unmodified mirror and verifies the bytes either way. |
 | Data processing | pandas 2.3 + PyArrow, Parquet cache | 7 GB of CSVs parse once into a ~10 MB-per-home 1-minute cache in true UTC. |
 | Deep learning | PyTorch 2.14 (CUDA 13.0) on an RTX 5090 laptop GPU | Windows are gathered on the GPU by index and never materialised: ~17 s per epoch over 3.75 M windows, seeded and deterministic. |
-| Models | Seq2Point CNN (Zhang et al. 2018) | The most replicated architecture on REFIT washing machines, and small enough for three seeds of every variant. |
+| Models | Seq2Point CNN (Zhang et al. 2018); NILMFormer (KDD 2025) as a challenger | Seq2Point is the most replicated architecture on REFIT washing machines and small enough for three seeds of every variant; the transformer was tested against it and lost. |
 | Baselines | LightGBM 4.7 on window features; usage profile; always-off | They show the deep model earns its complexity. |
-| Notebooks | Jupyter, executed headless in order by papermill | Seven notebooks, each with the reason before every step and a closing summary. |
+| Notebooks | Jupyter, executed headless in order by papermill | Nine notebooks, each with the reason before every step and a closing summary. |
 | Serving | ONNX Runtime 1.30 (int8 dense layers, per-channel; fp32 convolutions), FastAPI, Pydantic 2 | A 12.9 MB model in a ~100 MB image, with metric parity to PyTorch measured on a full test home. The convolutions stay fp32 because int8 convolutions ran 4–6× slower on the server CPU. |
 | Hosting | Fly.io Machines (dedicated core), London, auto-stop | Pay only while serving; health-checked; non-root container. |
-| Quality gates | pytest (52 tests); GitHub Actions: library tests, API tests, Docker build, container smoke test | Every cleaning rule, metric, split guarantee and API contract is pinned by a test. |
+| Quality gates | pytest (60 tests); GitHub Actions: library tests, API tests, Docker build, container smoke test | Every cleaning rule, metric, split guarantee and API contract is pinned by a test. |
 
 ## Architecture
 
@@ -164,12 +171,14 @@ flowchart TB
         UTC["Map to true UTC per home<br/>1-minute Parquet cache"]
     end
 
-    subgraph Analysis["Notebooks 01-06"]
+    subgraph Analysis["Notebooks 01-08"]
         NB1["01 Raw House 1<br/>inspection and cleaning"]
         NB2["02 Washing-machine EDA"]
         NB3["03 Data contract<br/>splits and leakage audit"]
         NB4["04-05b Baselines, Seq2Point,<br/>gated and augmented variants"]
         NB6["06 Unseen-home evaluation,<br/>failure analysis, 15/30-min study"]
+        NB7["07 Transformer challenger<br/>NILMFormer vs Seq2Point"]
+        NB8["08 Confidence intervals,<br/>operational checks"]
     end
 
     subgraph Outputs["Versioned outputs"]
@@ -187,10 +196,13 @@ flowchart TB
     RTXT --> FETCH
     FETCH --> EXTRACT --> UTC
     EXTRACT --> NB1
-    UTC --> NB2 --> NB3 --> NB4 --> NB6
+    UTC --> NB2 --> NB3 --> NB4 --> NB6 --> NB8
+    NB4 --> NB7
     NB1 --> ART
     NB2 --> ART
     NB4 --> ART
+    NB7 --> ART
+    NB8 --> ART
     NB6 --> ART --> DOCS
     NB4 -->|"selected checkpoints"| EXPORT --> API
 ```
@@ -348,7 +360,7 @@ python -m ipykernel install --user --name refit-nilm --display-name refit-nilm
 # 4. data: download (or reuse data/), verify SHA-256, extract, build the 1-minute cache (~7 GB)
 python scripts/prepare_data.py
 
-# 5. tests, then every notebook in order (~1 h with a laptop GPU; writes artifacts/)
+# 5. tests, then every notebook in order (about 2 h with a laptop GPU; writes artifacts/)
 python -m pytest -q
 python scripts/run_notebooks.py
 
@@ -375,8 +387,9 @@ decimals (`artifacts/metrics/reproducibility_check.json`).
 
 ## Design trade-offs
 
-- **Seq2Point over a Transformer.** It is proven on this exact dataset and fast enough to train three
-  seeds of every variant, a window ablation and a resolution study.
+- **Seq2Point over a Transformer, now tested.** NILMFormer (KDD 2025) lost on validation by a wide
+  margin under a rule fixed before training. It costs 16× the CPU per prediction. Seq2Point is
+  proven on this dataset and fast enough to train three seeds of every variant.
 - **Changes tested one at a time.** The gated and the augmented models each differ from Seq2Point in
   one respect, so their effect can be attributed; acceptance was decided on validation only.
 - **A seed ensemble as the shipped model.** It has the best validation scores at no extra training
@@ -393,8 +406,8 @@ analysis decisions, verification of results and interpretation are my own.
 
 ## Roadmap
 
-- **Transformer comparison:** NILMFormer (KDD 2025), with per-window normalisation, on the same split
-  and metrics.
+- **Transformer, second attempt:** more training homes, early stopping by cross-validation over
+  homes, and a tuning budget matched to Seq2Point's. The first attempt (notebook 07) did not transfer.
 - **More appliances from the same aggregate:** dishwasher and kettle heads sharing the trunk.
 - **Richer electrical inputs:** reactive power and current harmonics from in-home meters, which
   separate a motor from a resistive heater.
@@ -413,15 +426,19 @@ analysis decisions, verification of results and interpretation are my own.
 │   ├── augment.py         training-time augmentation with real appliance activations
 │   ├── features.py        window features (LightGBM) and usage profile
 │   ├── models/seq2point.py  Seq2Point and gated Seq2Point
+│   ├── models/nilmformer.py NILMFormer (KDD 2025), ported with its Apache-2.0 notice
 │   ├── train.py           GPU training loop, early stopping, checkpoints
+│   ├── train_seq2seq.py   the same for sequence-to-sequence models
+│   ├── uncertainty.py     day-block, stationary and cluster bootstrap; event-metric variants
 │   └── metrics.py         NDE, SAE, EpD, MAE(_ON), F1, AUPRC, cycle-level and energy-split metrics
-├── notebooks/             01–06 incl. 05b, executed .ipynb
-├── scripts/               prepare_data, run_notebooks, export_onnx, check_onnx_parity, edit_markdown
+├── notebooks/             01–08 incl. 05b, executed .ipynb
+├── scripts/               prepare_data, run_notebooks, export_onnx, check_onnx_parity, check_nilmformer_port, edit_markdown
 ├── tests/                 library unit tests
 ├── service/               FastAPI + ONNX service, tests, Dockerfile, fly.toml, real-day example
 ├── artifacts/             figures, tables, metrics JSON, training logs
 ├── data/                  README + manifest (sources, SHA-256); archives and caches rebuilt
 ├── research/              reading list, protocol notes, script to fetch the open-access papers
+├── LICENSES/              Apache-2.0 text for the adapted NILMFormer module
 ├── environment.yml, requirements-lock.txt, conda-lock-win64.txt
 └── .github/workflows/ci.yml
 ```
@@ -435,7 +452,10 @@ analysis decisions, verification of results and interpretation are my own.
 
 ## Licence and data
 
-Code: MIT ([`LICENSE`](LICENSE)). Data: REFIT Electrical Load Measurements, University of Strathclyde,
+Code: MIT ([`LICENSE`](LICENSE)), except
+[`src/refit_nilm/models/nilmformer.py`](src/refit_nilm/models/nilmformer.py), which is adapted from
+NILMFormer (© 2025 EDF, Apache-2.0; licence text in [`LICENSES/Apache-2.0.txt`](LICENSES/Apache-2.0.txt);
+the changes are listed at the top of the file). Data: REFIT Electrical Load Measurements, University of Strathclyde,
 CC BY 4.0 (Murray, Stankovic & Stankovic 2017, *Scientific Data* 4:160122). `scripts/prepare_data.py`
 downloads it from the university portal and falls back to an unmodified, attributed copy on the
 release [`refit-data-081116`](https://github.com/amit-badave-04/refit-nilm-pipeline/releases/tag/refit-data-081116).
