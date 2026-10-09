@@ -26,7 +26,7 @@ Request body:
 {"start": "2014-04-15T00:00:00Z", "interval_seconds": 60, "aggregate_w": [312.4, 309.9, null, 2410.0, "..."]}
 ```
 
-Validation at the boundary (HTTP 422 with a reason): timezone-aware `start`; `interval_seconds`
+Validation at the boundary (HTTP 422 with the reason and field, never echoing the submitted data): timezone-aware `start`; `interval_seconds`
 must be 60; 81 to 2,880 readings (one window to 2 days; configurable with `MAX_POINTS`); values within 0–25,000 W; `null` allowed
 for missing readings up to 10 % (the same tolerance the model was trained and evaluated with);
 unknown fields rejected. Bodies over 2 MB are refused (413) and
@@ -86,7 +86,7 @@ seconds), and health-checks `/health`. The image runs as a non-root user.
 ## Operational notes and limits
 
 * Measured latency for a one-day request (1,440 windows, three-model ensemble): ~1.0 s of CPU time
-  on one laptop core; ~11 s end to end on the default `shared-cpu-1x` machine, whose CPU share is
+  on one laptop core; 7–11 s end to end on the default `shared-cpu-1x` machine, whose CPU share is
   throttled under sustained load; `/health` answers in ~0.55 s from India. `flyctl scale vm
   performance-1x` gives a dedicated core (~1–2 s per day of data) and allows a larger `MAX_POINTS`.
   The first request after the machine has auto-stopped adds ~4 s of start-up.

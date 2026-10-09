@@ -93,3 +93,10 @@ def test_model_file_carries_no_build_machine_metadata():
     data = (Path(__file__).resolve().parents[1] / "model" / "model.onnx").read_bytes()
     for pattern in (b":\Users", b":/Users", b"/home/", b"site-packages", b"stack_trace"):
         assert pattern not in data, pattern
+
+
+def test_validation_errors_do_not_echo_the_payload(client):
+    values = [123.456] * 3000
+    r = client.post("/v1/disaggregate", json=_req(values))
+    assert r.status_code == 422
+    assert "123.456" not in r.text and "at most" in r.text

@@ -21,6 +21,7 @@ from datetime import timedelta
 
 import numpy as np
 from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from .inference import Engine, detect_cycles
@@ -67,6 +68,12 @@ def create_app(engine: Engine | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     limiter = RateLimiter(RATE_LIMIT_PER_MIN)
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
+        """422 with the reason and location only: the submitted readings are never echoed back."""
+        errors = [{"loc": e.get("loc"), "msg": e.get("msg"), "type": e.get("type")} for e in exc.errors()]
+        return JSONResponse({"detail": errors}, status_code=422)
 
     @app.middleware("http")
     async def guard_and_log(request: Request, call_next):
