@@ -57,6 +57,38 @@ def test_masked_mse_ignores_unusable_minutes():
     assert float(S.masked_mse(pred, target, torch.zeros_like(ok))) == 0.0
 
 
+@pytest.mark.parametrize("factor", [1, 2])
+def test_each_epoch_takes_the_published_number_of_masked_loss_steps(corpus, monkeypatch, factor):
+    calls = []
+    real = S.masked_mse
+
+    def spy(pred, target, ok):
+        calls.append(int(ok.numel() - ok.sum()))  # how many unusable minutes this batch masks
+        return real(pred, target, ok)
+
+    monkeypatch.setattr(S, "masked_mse", spy)
+    cfg = _small_cfg(max_epochs=1, windows_per_epoch_factor=factor)
+    S.fit(corpus, cfg, device="cpu")
+    n_draw = factor * int(np.ceil(len(corpus.starts["train"]) / WINDOW))  # tile the training minutes once per factor
+    assert len(calls) == int(np.ceil(n_draw / cfg.batch_size))
+
+
+def test_learning_rate_drops_after_a_plateau_in_validation_nde(corpus, monkeypatch):
+    calls = {"n": 0}
+
+    def scripted_predict(model, src, starts, batch_size=4096):
+        calls["n"] += 1
+        truth = np.nan_to_num(corpus.wm[starts + WINDOW // 2])
+        return truth if calls["n"] == 1 else np.zeros_like(truth)  # best at epoch 1, flat after
+
+    monkeypatch.setattr(S, "predict", scripted_predict)
+    cfg = _small_cfg(max_epochs=4, patience=10, lr_patience=1)
+    _, hist, _ = S.fit(corpus, cfg, device="cpu")
+    lrs = [h["lr"] for h in hist]
+    assert lrs[0] == cfg.lr and lrs[1] == cfg.lr  # one bad epoch is within the scheduler's patience
+    assert lrs[-1] < cfg.lr  # after more bad epochs the rate is reduced
+
+
 def test_training_scale_is_the_largest_training_aggregate(corpus):
     assert S.training_scale(corpus) == pytest.approx(float(corpus.agg[corpus.targets("train")].max()))
 

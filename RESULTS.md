@@ -27,7 +27,7 @@ brackets). Data preparation and cleaning decisions are in [`DATA.md`](DATA.md).
   acceptance rule fixed before training, on cycle detection.
 * **A 2025 transformer did not beat it.** I tested NILMFormer (KDD 2025) under a rule committed
   before its full training run. It was worse than predicting zero on the validation home (NDE 1.11
-  vs 0.68), and it found far fewer washes on the unseen homes (cycle F1 0.11 vs 0.48). An 8× larger
+  vs 0.67), and it found far fewer washes on the unseen homes (cycle F1 0.11 vs 0.48). An 8× larger
   training budget lowered its training loss but not its validation error.
 * **15/30-minute meters.** A model that only sees 15- or 30-minute data loses its skill (worse than
   predicting zero per interval); 1-minute input is what makes washing-machine disaggregation work.
@@ -148,7 +148,7 @@ since NILM has no standard one), and the share of true energy **recovered** vs f
 |---|---|---|---|---|
 | always-off | 1.00 | 0 | 0 % | 0 % |
 | LightGBM | 0.87 | 0.34 | 28 % | 337 % |
-| Seq2Point (M2) | 0.68 ± 0.05 | 0.60 ± 0.02 | 61 % | 98 % |
+| Seq2Point (M2) | 0.67 ± 0.05 | 0.60 ± 0.02 | 61 % | 98 % |
 | gated (M3) | 0.83 ± 0.03 | 0.47 ± 0.04 | 55 % | 133 % |
 | augmented (M4) | 0.61 ± 0.08 | 0.57 ± 0.08 | 67 % | 168 % |
 | **M2 seed ensemble (primary)** | **0.60** | **0.64** | 62 % | 97 % |
@@ -348,7 +348,8 @@ spends at least 5 minutes above 750 W; I chose that threshold on House 18 only.
   the truly heated washes unheated in Houses 8 and 10. Its F1 beats the trivial "every wash is
   heated" labeller only in Houses 1 and 6.
 * End to end, it finds 19–88 % of true heated washes depending on the home, and 30–83 % of its
-  heated detections are real.
+  heated detections are real (in the five homes that heat water; in House 19, which had no heated
+  wash, all 12 heated detections are false).
 
 **Targeting** [`nb08_targeting.csv`]. Ranking homes by hot washes per week, model vs plug monitor:
 Spearman ρ = 0.94 over the six unseen homes, and 0.88 over all 13 held-out periods (the six unseen

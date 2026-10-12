@@ -136,7 +136,7 @@ candidate is accepted or rejected on the validation home (House 18), with three 
 
 | candidate | validation NDE | cycle F1 | decision |
 |---|---|---|---|
-| Seq2Point, W = 81 (reference) | 0.68 ± 0.05 | 0.60 ± 0.02 | kept |
+| Seq2Point, W = 81 (reference) | 0.67 ± 0.05 | 0.60 ± 0.02 | kept |
 | Seq2Point, W = 237 | 0.80 (seed 42) | 0.52 (seed 42) | window 81 chosen |
 | on/off-gated Seq2Point (subtask gating) | 0.83 ± 0.03 | 0.47 ± 0.04 | not adopted |
 | Seq2Point + distractor-appliance augmentation | 0.61 ± 0.08 | 0.57 ± 0.08 | not adopted (acceptance rule fixed before training) |
@@ -159,7 +159,7 @@ candidate is accepted or rejected on the validation home (House 18), with three 
 | Notebooks | Jupyter, executed headless in order by papermill | Nine notebooks, each with the reason before every step and a closing summary. |
 | Serving | ONNX Runtime 1.30 (int8 dense layers, per-channel; fp32 convolutions), FastAPI, Pydantic 2 | A 12.9 MB model in a ~100 MB image, with metric parity to PyTorch measured on a full test home. The convolutions stay fp32 because int8 convolutions ran 4–6× slower on the server CPU. |
 | Hosting | Fly.io Machines (dedicated core), London, auto-stop | Pay only while serving; health-checked; non-root container. |
-| Quality gates | pytest (75 tests); GitHub Actions: library tests, API tests, Docker build, container smoke test | Every cleaning rule, metric, split guarantee and API contract is pinned by a test. |
+| Quality gates | pytest (81 tests); GitHub Actions: library tests, API tests, Docker build, container smoke test | Every cleaning rule, metric, split guarantee and API contract is pinned by a test. |
 
 ## Architecture
 

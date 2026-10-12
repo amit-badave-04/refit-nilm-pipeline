@@ -53,28 +53,56 @@ def test_daily_statistics_match_point_metrics_when_the_prediction_misses_a_whole
         assert U.metrics_from_days(d)[k] == pytest.approx(point[k], rel=1e-9), k
 
 
-def test_bootstrap_interval_contains_the_point_estimate():
+def test_bootstrap_interval_contains_the_point_estimate_and_really_resamples():
     y, yhat = _synthetic(days=20)
     d = U.daily_stats(y, yhat)
-    ci = U.percentile_ci(U.bootstrap_home(d, n_boot=300))
+    reps = U.bootstrap_home(d, n_boot=300)
+    ci = U.percentile_ci(reps)
     point = U.metrics_from_days(d)
     for k in ("nde", "epd_wh"):
-        assert ci.loc[k, "low"] <= point[k] <= ci.loc[k, "high"]
+        assert reps[k].nunique() > 50  # replicates differ: days are actually being resampled
+        assert ci.loc[k, "low"] < point[k] < ci.loc[k, "high"]
 
 
-def test_stationary_bootstrap_draws_runs_of_consecutive_days():
+def test_percentile_interval_returns_the_requested_quantiles():
+    reps = pd.DataFrame({"m": np.arange(1001, dtype=float)})  # 0..1000
+    ci = U.percentile_ci(reps, level=0.95)
+    assert ci.loc["m", "low"] == pytest.approx(25.0) and ci.loc["m", "high"] == pytest.approx(975.0)
+    ci90 = U.percentile_ci(reps, level=0.90)
+    assert ci90.loc["m", "low"] == pytest.approx(50.0) and ci90.loc["m", "high"] == pytest.approx(950.0)
+
+
+def test_stationary_bootstrap_draws_runs_of_consecutive_days_with_the_requested_mean_length():
     rng = np.random.default_rng(0)
-    idx = U.stationary_indices(200, mean_block=7, rng=rng)
-    assert len(idx) == 200 and idx.min() >= 0 and idx.max() < 200
-    steps = np.diff(idx)
-    assert np.mean((steps == 1) | (steps == -199)) > 0.7   # mostly consecutive (circular), as blocks should be
+    idx = U.stationary_indices(20_000, mean_block=7, rng=rng)
+    assert len(idx) == 20_000 and idx.min() >= 0 and idx.max() < 20_000
+    breaks = np.flatnonzero(np.diff(idx) != 1)  # a new block starts wherever the next index is not consecutive
+    mean_run = len(idx) / (len(breaks) + 1)
+    assert 6.0 < mean_run < 8.0  # geometric block lengths with mean 7 (a few joins are invisible)
+
+
+def test_seven_day_blocks_widen_the_interval_when_days_are_dependent():
+    rng = np.random.default_rng(3)
+    n = 400
+    level = np.repeat(rng.normal(0, 1, n // 20), 20)  # 20-day spells: strong day-to-day dependence
+    d = pd.DataFrame({"sum_y2": 1.0, "sum_err2": np.exp(level), "y_kwh": 1.0, "yhat_kwh": 1.0 + np.exp(level),
+                      "energy_day": True, "n_true": 1, "n_pred": 1, "n_matched": 1},
+                     index=pd.date_range("2014-01-01", periods=n, freq="D", tz="UTC"))
+    width = lambda reps: float(reps["epd_wh"].quantile(0.975) - reps["epd_wh"].quantile(0.025))  # noqa: E731
+    one_day = width(U.bootstrap_home(d, n_boot=400, seed=1))
+    week = width(U.bootstrap_home(d, n_boot=400, seed=1, mean_block=7))
+    assert week > 1.3 * one_day  # the block option is really used, and it does what it is for
 
 
 def test_cluster_bootstrap_resamples_whole_homes():
     per_home = pd.DataFrame({"nde": [0.4, 0.7, 1.4]})
+    per_home["twice"] = 2 * per_home["nde"]
     reps = U.cluster_bootstrap(per_home, n_boot=500, seed=1)
     # every replicate is a mean of three of the three values, so it lies within their range
     assert reps["nde"].between(0.4, 1.4).all() and reps["nde"].round(9).nunique() <= 10  # C(5, 3) multisets
+    assert reps["nde"].nunique() > 3  # it does resample
+    # columns are resampled together (whole homes), so the tie between them holds in every replicate
+    np.testing.assert_allclose(reps["twice"], 2 * reps["nde"])
 
 
 def test_match_by_start_is_one_to_one():
