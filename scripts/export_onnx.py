@@ -173,7 +173,7 @@ def main() -> None:
         "training_config": {k: v for k, v in cfg.__dict__.items() if k != "seed"},
         "seeds": [l[1].seed for l in loaded],
         "quantisation": {"type": "dynamic int8 weights (per-channel scales) for the dense layers; convolutions in fp32", "parity_set": "4,000 random windows from House 8", "parity_vs_fp32": parity, "full_house_parity": "artifacts/metrics/onnx_parity.json"},
-        "intended_use": "Portfolio-level estimates of washing-machine energy and usage timing in UK-like homes.",
+        "intended_use": "Portfolio-level indications of washing-machine use in UK-like homes: wash frequency and timing, ranking homes by hot-wash frequency, and the direction of month-to-month change. In the six test homes, peak-hour shares ran high, monthly changes came out at about 0.55-0.6 of their true size, and the energy level of individual homes ranged from 0.66x to 1.49x the truth (RESULTS.md, notebook 08), so calibrate against a plug-metered panel before quoting levels or effect sizes.",
         "not_for": [
             "billing or any individually binding decision",
             "15/30-minute data as input: models trained on such data had no per-interval skill (RESULTS.md section 6); 1-minute input is required",

@@ -27,8 +27,12 @@ def run(stem: str) -> None:
     out = nbformat.read(path, as_version=4)
     out.metadata.pop("papermill", None)
     for cell in out.cells:
-        for key in ("papermill", "execution", "tags"):
+        for key in ("papermill", "execution"):
             cell.metadata.pop(key, None)
+        # keep the "parameters" tag so `papermill -p NAME value` still targets the right cell
+        tags = [t for t in cell.metadata.pop("tags", []) if t != "injected-parameters"]
+        if tags:
+            cell.metadata["tags"] = tags
     nbformat.write(out, path)
     leaks = [c for c in out.cells for o in c.get("outputs", []) if "Users" + chr(92) in str(o) or "AppData" in str(o)]
     if leaks:
